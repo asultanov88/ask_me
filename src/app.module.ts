@@ -4,6 +4,7 @@ import { AppService } from './app.service';
 import { ProvidersModule } from './providers/providers.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseEntity } from './database/entities/database';
+import { GatewayModule } from './gateway/gateway.module';
 
 @Module({
   imports: [
@@ -18,7 +19,8 @@ import { DatabaseEntity } from './database/entities/database';
       synchronize: false,
       options: { trustServerCertificate: true }
     }),
-    ProvidersModule
+    ProvidersModule,
+    GatewayModule
   ],
   controllers: [AppController],
   providers: [AppService]
