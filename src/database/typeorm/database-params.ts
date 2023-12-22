@@ -19,3 +19,9 @@ export interface ProcessesQueryParam {
   declarationnName: string;
   paramValue: string;
 }
+
+export interface DataKeyMismatch {
+  mismatch: boolean;
+  paramKey: string[];
+  dtoKey: string[];
+}

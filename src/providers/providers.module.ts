@@ -4,10 +4,12 @@ import { ProvidersService } from './providers.service';
 import { DatabaseEntity } from 'src/database/entities/database';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { MsSql } from 'src/database/typeorm/mssql';
+import { ErrorHandler } from 'src/Helper/ErrorHandler';
 
 @Module({
   imports: [TypeOrmModule.forFeature([DatabaseEntity])],
   controllers: [ProvidersController],
-  providers: [MsSql, ProvidersService]
+  providers: [MsSql, ErrorHandler, ProvidersService],
+  exports: [ProvidersService]
 })
 export class ProvidersModule {}

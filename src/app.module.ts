@@ -1,10 +1,14 @@
-import { Module } from '@nestjs/common';
+import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProvidersModule } from './providers/providers.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { DatabaseEntity } from './database/entities/database';
 import { GatewayModule } from './gateway/gateway.module';
+import { AuthModule } from './auth/auth.module';
+import { UsersModule } from './users/users.module';
+import { ErrorHandler } from './Helper/ErrorHandler';
+import { KeyUpperCaseMiddleware } from './middleware/keyUppserCase.middleware';
 
 @Module({
   imports: [
@@ -16,13 +20,19 @@ import { GatewayModule } from './gateway/gateway.module';
       password: process.env.DATABASE_PASSWORD,
       database: process.env.DATABASE_NAME,
       entities: [DatabaseEntity],
-      synchronize: false,
+      synchronize: true,
       options: { trustServerCertificate: true }
     }),
+    GatewayModule,
     ProvidersModule,
-    GatewayModule
+    AuthModule,
+    UsersModule
   ],
   controllers: [AppController],
   providers: [AppService]
 })
-export class AppModule {}
+export class AppModule implements NestModule {
+  public configure(consumer: MiddlewareConsumer): void {
+    consumer.apply(KeyUpperCaseMiddleware).forRoutes('*');
+  }
+}
