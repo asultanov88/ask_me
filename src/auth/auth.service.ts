@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Injectable, UnauthorizedException } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DatabaseEntity } from 'src/database/entities/database';
 import { MsSql } from 'src/database/typeorm/mssql';
@@ -7,6 +7,7 @@ import { UsersService } from 'src/users/users.service';
 import { UserLogin } from './models/dto';
 import { UserDto } from 'src/users/models/dto';
 import * as bcrypt from 'bcrypt';
+import { JwtService } from '@nestjs/jwt';
 
 @Injectable()
 export class AuthService {
@@ -14,7 +15,8 @@ export class AuthService {
     @InjectRepository(DatabaseEntity)
     private database: Repository<null>,
     private mssql: MsSql,
-    private readonly userService: UsersService
+    private readonly userService: UsersService,
+    private readonly jwtService: JwtService
   ) {}
 
   async login(userLogin: UserLogin): Promise<any> {
@@ -22,10 +24,16 @@ export class AuthService {
       userLogin.email
     );
     if (
+      user &&
       user.Password ===
-      (await bcrypt.hash(userLogin.password, process.env.SALT_KEY))
+        (await bcrypt.hash(userLogin.password, process.env.SALT_KEY))
     ) {
-      console.log('success');
+      const payload = { sub: user.UserId, username: user.Email };
+      return {
+        access_token: await this.jwtService.signAsync(payload)
+      };
+    } else {
+      throw new UnauthorizedException();
     }
   }
 }

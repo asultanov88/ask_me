@@ -33,6 +33,6 @@ import { KeyUpperCaseMiddleware } from './middleware/keyUppserCase.middleware';
 })
 export class AppModule implements NestModule {
   public configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(KeyUpperCaseMiddleware).forRoutes('*');
+    consumer.apply(KeyUpperCaseMiddleware).exclude('/auth').forRoutes('*');
   }
 }
