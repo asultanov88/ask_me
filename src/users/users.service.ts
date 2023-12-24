@@ -18,6 +18,7 @@ export class UsersService {
     private errorHandler: ErrorHandler
   ) {}
 
+  // Gets user by email.
   async getUserByEmail(email: string): Promise<UserDto> {
     const databaseParams: DatabaseParam[] = [
       {
@@ -35,6 +36,7 @@ export class UsersService {
     }
   }
 
+  // Inserts a new user.
   async postuser(user: UserDto): Promise<number> {
     user.Password = await bcrypt.hash(user.Password, process.env.SALT_KEY);
 
@@ -52,7 +54,7 @@ export class UsersService {
     );
     try {
       const result = await this.database.query(dbQuery);
-      return result;
+      return result[0];
     } catch (error) {
       this.errorHandler.throwDatabaseError(error);
     }

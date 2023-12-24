@@ -17,7 +17,7 @@ export class MsSql {
 
   // Builds SQL query for execution.
   public getQuery(
-    params: DatabaseParam[],
+    params: DatabaseParam[] = [],
     storedProcedurename: string
   ): string {
     let query: string = '';
@@ -101,7 +101,9 @@ export class MsSql {
     ) {
       processedParam = {
         paramName: param.inputParamName,
-        paramValue: this.escapeSql(param.parameterValue),
+        paramValue: this.escapeSql(
+          param.parameterValue ? param.parameterValue : ''
+        ),
         declarationnName: null
       };
     }
@@ -125,9 +127,8 @@ export class MsSql {
       dtoKey: dtoKeys
     };
 
-    const dtoKeysLowerCase = dtoKeys.map((dk) => (dk = dk.toLowerCase()));
     paramKeys.forEach((pk) => {
-      if (!dtoKeysLowerCase.includes(pk.toLowerCase())) {
+      if (!dtoKeys.includes(pk)) {
         dataKeyMismatch.mismatch = true;
       }
     });

@@ -1,4 +1,9 @@
-import { MiddlewareConsumer, Module, NestModule } from '@nestjs/common';
+import {
+  MiddlewareConsumer,
+  Module,
+  NestModule,
+  ValidationPipe
+} from '@nestjs/common';
 import { AppController } from './app.controller';
 import { AppService } from './app.service';
 import { ProvidersModule } from './providers/providers.module';
@@ -7,8 +12,8 @@ import { DatabaseEntity } from './database/entities/database';
 import { GatewayModule } from './gateway/gateway.module';
 import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
-import { ErrorHandler } from './Helper/ErrorHandler';
-import { KeyUpperCaseMiddleware } from './middleware/keyUppserCase.middleware';
+import { AuthMiddleware } from './middleware/auth.middleware';
+import { APP_PIPE } from '@nestjs/core';
 
 @Module({
   imports: [
@@ -29,10 +34,19 @@ import { KeyUpperCaseMiddleware } from './middleware/keyUppserCase.middleware';
     UsersModule
   ],
   controllers: [AppController],
-  providers: [AppService]
+  providers: [
+    AppService,
+    {
+      provide: APP_PIPE,
+      useValue: new ValidationPipe({
+        whitelist: true,
+        transform: true
+      })
+    }
+  ]
 })
 export class AppModule implements NestModule {
   public configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(KeyUpperCaseMiddleware).exclude('/auth').forRoutes('*');
+    consumer.apply(AuthMiddleware).exclude('/auth/login').forRoutes('*');
   }
 }

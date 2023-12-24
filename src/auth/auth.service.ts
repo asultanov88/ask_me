@@ -19,14 +19,17 @@ export class AuthService {
     private readonly jwtService: JwtService
   ) {}
 
+  // Authenticates user login.
   async login(userLogin: UserLogin): Promise<any> {
     const user: UserDto = await this.userService.getUserByEmail(
-      userLogin.email
+      userLogin.Email
     );
+
     if (
+      userLogin.Password &&
       user &&
       user.Password ===
-        (await bcrypt.hash(userLogin.password, process.env.SALT_KEY))
+        (await bcrypt.hash(userLogin.Password, process.env.SALT_KEY))
     ) {
       const payload = { sub: user.UserId, username: user.Email };
       return {
