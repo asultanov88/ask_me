@@ -1,4 +1,4 @@
-import { OnModuleInit } from '@nestjs/common';
+import { OnModuleInit, UseGuards } from '@nestjs/common';
 import {
   MessageBody,
   SubscribeMessage,
@@ -6,6 +6,8 @@ import {
   WebSocketServer
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
+import { AuthGuard } from 'src/auth/auth.guard';
+import { SocketMessageDto } from './dto';
 
 @WebSocketGateway()
 export class Gateway implements OnModuleInit {
@@ -19,9 +21,9 @@ export class Gateway implements OnModuleInit {
     });
   }
 
+  @UseGuards(AuthGuard)
   @SubscribeMessage('incomingMessage')
-  onIncomingMessage(@MessageBody() body: any) {
-    console.log(body);
-    this.server.emit('outgoingMessage', { message: body });
+  onIncomingMessage(@MessageBody() body: SocketMessageDto) {
+    this.server.emit('outgoingMessage', body.Message);
   }
 }
