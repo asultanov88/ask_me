@@ -11,7 +11,9 @@ export class TableTypes {
       'email',
       'password',
       'createdAt',
-      'inactive'
+      'inactive',
+      'isClient',
+      'isProvider'
     ],
     dto: new UserDto()
   };

@@ -103,11 +103,11 @@ export class MsSql {
           const paramValue =
             bulkParamObj[f] ?? bulkParamObj[this.firstCharToLowerCase(f)];
           query += `${
-            !paramValue ||
             paramValue?.toString()?.toLowerCase() === 'null' ||
+            paramValue?.toString()?.toLowerCase() === 'undefined' ||
             paramValue?.toString()?.trim() === ''
               ? 'NULL'
-              : this.escapeSql(paramValue)
+              : this.escapeSql(paramValue?.toString())
           }${param.tableType.fields.length - valueIndex === 1 ? '' : ','}`;
         });
         query += `)${
@@ -130,7 +130,7 @@ export class MsSql {
       processedParam = {
         paramName: param.inputParamName,
         paramValue: this.escapeSql(
-          param.parameterValue ? param.parameterValue : ''
+          param.parameterValue ? param.parameterValue.toString() : ''
         ),
         declarationnName: null
       };
@@ -141,8 +141,8 @@ export class MsSql {
 
   // Escapes single quote, wraps string into single quotes
   private escapeSql(input: string): string {
-    input = input.replaceAll("'", "''");
-    return `'${input}'`;
+    input = input?.replaceAll("'", "''");
+    return `'${input ? input : ''}'`;
   }
 
   // Checks bulk insert DTO against the Table Type.
