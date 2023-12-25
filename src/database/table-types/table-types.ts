@@ -5,19 +5,19 @@ export class TableTypes {
   public static UserTableType: TableType = {
     typeName: 'UserTableType',
     fields: [
-      'UserId',
-      'FirstName',
-      'LastName',
-      'Email',
-      'Password',
-      'CreatedAt',
-      'Inactive'
+      'userId',
+      'firstName',
+      'lastName',
+      'email',
+      'password',
+      'createdAt',
+      'inactive'
     ],
     dto: new UserDto()
   };
   public static ProviderTableType: TableType = {
     typeName: 'ProviderTableType',
-    fields: ['ProviderId', 'FirstName', 'LastName', 'CreatedAt'],
+    fields: ['providerId', 'firstName', 'lastName', 'createdAt'],
     dto: new ProviderDto()
   };
 }

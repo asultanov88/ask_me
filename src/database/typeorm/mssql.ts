@@ -2,7 +2,7 @@ import { Injectable } from '@nestjs/common';
 import {
   DataKeyMismatch,
   DatabaseParam,
-  ProcessesQueryParam
+  ProcessedQueryParam
 } from './database-params';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
 
@@ -15,13 +15,41 @@ export class MsSql {
   // New line.
   private readonly newLine: string = '\n';
 
+  // Parses database result set array by changing key format to camel case.
+  // Returns an array.
+  public parseMultiResultSet(input: []): any[] {
+    const parsedResult = [];
+    input.forEach((obj) => {
+      const parsedObj = {};
+      for (const [key, value] of Object.entries(obj)) {
+        parsedObj[this.firstCharToLowerCase(key)] = value;
+      }
+      parsedResult.push(parsedObj);
+    });
+    return parsedResult;
+  }
+
+  // Parses database result set array by changing key format to camel case.
+  // Returns a single object.
+  public parseSingleResultSet(input: []): any {
+    const parsedResult = [];
+    input.forEach((obj) => {
+      const parsedObj = {};
+      for (const [key, value] of Object.entries(obj)) {
+        parsedObj[this.firstCharToLowerCase(key)] = value;
+      }
+      parsedResult.push(parsedObj);
+    });
+    return parsedResult.length > 0 ? parsedResult[0] : {};
+  }
+
   // Builds SQL query for execution.
   public getQuery(
     params: DatabaseParam[] = [],
     storedProcedurename: string
   ): string {
     let query: string = '';
-    const queryParams: ProcessesQueryParam[] = [];
+    const queryParams: ProcessedQueryParam[] = [];
     params.forEach((p, index) => {
       queryParams.push(this.parseParam(p, index));
     });
@@ -48,9 +76,9 @@ export class MsSql {
     return query;
   }
 
-  private parseParam(param: DatabaseParam, index: number): ProcessesQueryParam {
+  private parseParam(param: DatabaseParam, index: number): ProcessedQueryParam {
     let query: string = '';
-    let processedParam: ProcessesQueryParam = null;
+    let processedParam: ProcessedQueryParam = null;
 
     // Bulk value set using table type.
     if (param?.tableType?.typeName && param?.bulkParamValue?.length > 0) {

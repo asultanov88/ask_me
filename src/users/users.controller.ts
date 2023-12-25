@@ -8,6 +8,6 @@ export class UsersController {
 
   @Post('user')
   async postUser(@Body() user: UserDto): Promise<number> {
-    return await this.userService.postuser(user);
+    return await this.userService.postUser(user);
   }
 }

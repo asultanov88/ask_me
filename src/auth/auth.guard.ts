@@ -14,7 +14,7 @@ export class AuthGuard implements CanActivate {
 
   async canActivate(context: ExecutionContext): Promise<boolean> {
     const message = context.switchToWs().getData() as SocketMessageDto;
-    const accessToken = message.Access_token;
+    const accessToken = message.accessToken;
     if (!accessToken) {
       throw new UnauthorizedException();
     }

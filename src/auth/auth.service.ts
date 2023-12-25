@@ -22,18 +22,18 @@ export class AuthService {
   // Authenticates user login.
   async login(userLogin: UserLogin): Promise<any> {
     const user: UserDto = await this.userService.getUserByEmail(
-      userLogin.Email
+      userLogin.email
     );
 
     if (
-      userLogin.Password &&
+      userLogin.password &&
       user &&
-      user.Password ===
-        (await bcrypt.hash(userLogin.Password, process.env.SALT_KEY))
+      user.password ===
+        (await bcrypt.hash(userLogin.password, process.env.SALT_KEY))
     ) {
-      const payload = { sub: user.UserId, username: user.Email };
+      const payload = { sub: user.userId, username: user.email };
       return {
-        access_token: await this.jwtService.signAsync(payload)
+        accessToken: await this.jwtService.signAsync(payload)
       };
     } else {
       throw new UnauthorizedException();

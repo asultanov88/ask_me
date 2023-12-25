@@ -1,21 +1,21 @@
 import { IsEmail, IsNotEmpty, IsNumber, IsString } from 'class-validator';
 
 export class UserDto {
-  UserId: number = null;
+  userId: number = null;
 
   @IsNotEmpty()
-  FirstName: string = null;
+  firstName: string = null;
 
   @IsNotEmpty()
-  LastName: string = null;
+  lastName: string = null;
 
   @IsEmail()
-  Email: string = null;
+  email: string = null;
 
   @IsNotEmpty()
-  Password: string = null;
+  password: string = null;
 
-  CreatedAt: string = null;
+  createdAt: string = null;
 
-  Inactive: string = null;
+  inactive: string = null;
 }

@@ -14,7 +14,7 @@ export class DatabaseParam {
   public bulkParamValue?: any[];
 }
 
-export interface ProcessesQueryParam {
+export interface ProcessedQueryParam {
   paramName: string;
   declarationnName: string;
   paramValue: string;

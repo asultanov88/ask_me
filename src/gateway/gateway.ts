@@ -24,6 +24,6 @@ export class Gateway implements OnModuleInit {
   @UseGuards(AuthGuard)
   @SubscribeMessage('incomingMessage')
   onIncomingMessage(@MessageBody() body: SocketMessageDto) {
-    this.server.emit('outgoingMessage', body.Message);
+    this.server.emit('outgoingMessage', body.message);
   }
 }

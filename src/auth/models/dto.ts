@@ -2,8 +2,8 @@ import { IsEmail, IsNotEmpty } from 'class-validator';
 
 export class UserLogin {
   @IsEmail()
-  Email: string;
+  email: string;
 
   @IsNotEmpty()
-  Password: string;
+  password: string;
 }

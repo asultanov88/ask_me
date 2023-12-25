@@ -29,16 +29,17 @@ export class UsersService {
 
     const dbQuery = this.mssql.getQuery(databaseParams, 'UspGetUserByEmail');
     try {
-      const result = await this.database.query(dbQuery);
-      return result?.length > 0 ? (result[0] as UserDto) : ({} as UserDto);
+      const resultSet = await this.database.query(dbQuery);
+      const parsedResult = this.mssql.parseSingleResultSet(resultSet);
+      return parsedResult ? (parsedResult as UserDto) : ({} as UserDto);
     } catch (error) {
       this.errorHandler.throwDatabaseError(error);
     }
   }
 
   // Inserts a new user.
-  async postuser(user: UserDto): Promise<number> {
-    user.Password = await bcrypt.hash(user.Password, process.env.SALT_KEY);
+  async postUser(user: UserDto): Promise<number> {
+    user.password = await bcrypt.hash(user.password, process.env.SALT_KEY);
 
     const databaseParams: DatabaseParam[] = [
       {
@@ -53,8 +54,9 @@ export class UsersService {
       'UspInsertUser'
     );
     try {
-      const result = await this.database.query(dbQuery);
-      return result[0];
+      const resultSet = await this.database.query(dbQuery);
+      const resultObj = this.mssql.parseSingleResultSet(resultSet);
+      return resultObj ? resultObj : { userId: null };
     } catch (error) {
       this.errorHandler.throwDatabaseError(error);
     }
