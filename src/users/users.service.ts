@@ -39,6 +39,10 @@ export class UsersService {
 
   // Inserts a new user.
   async postUser(user: UserDto): Promise<number> {
+    if (user.isClient === 1 && user.isProvider === 1) {
+      this.errorHandler.throwCustomError('User cannot be Client and Provider.');
+    }
+
     user.password = await bcrypt.hash(user.password, process.env.SALT_KEY);
 
     const databaseParams: DatabaseParam[] = [

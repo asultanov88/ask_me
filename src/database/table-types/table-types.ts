@@ -1,4 +1,3 @@
-import { ProviderDto } from 'src/providers/models/dto';
 import { UserDto } from 'src/users/models/dto';
 
 export class TableTypes {
@@ -16,11 +15,6 @@ export class TableTypes {
       'isProvider'
     ],
     dto: new UserDto()
-  };
-  public static ProviderTableType: TableType = {
-    typeName: 'ProviderTableType',
-    fields: ['providerId', 'firstName', 'lastName', 'createdAt'],
-    dto: new ProviderDto()
   };
 }
 

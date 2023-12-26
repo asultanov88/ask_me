@@ -20,4 +20,8 @@ export class ErrorHandler {
       HttpStatus.INTERNAL_SERVER_ERROR
     );
   }
+
+  public throwCustomError(errorMsg: string) {
+    throw new HttpException(errorMsg, HttpStatus.INTERNAL_SERVER_ERROR);
+  }
 }
