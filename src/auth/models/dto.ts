@@ -7,3 +7,11 @@ export class UserLogin {
   @IsNotEmpty()
   password: string;
 }
+
+export class AuthorisedUser {
+  userId: number;
+  username: string;
+  iat: number;
+  exp: number;
+  socketClientId;
+}

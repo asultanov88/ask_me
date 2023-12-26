@@ -31,7 +31,7 @@ export class AuthService {
       user.password ===
         (await bcrypt.hash(userLogin.password, process.env.SALT_KEY))
     ) {
-      const payload = { sub: user.userId, username: user.email };
+      const payload = { userId: user.userId, username: user.email };
       return {
         accessToken: await this.jwtService.signAsync(payload)
       };
