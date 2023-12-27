@@ -1,3 +1,5 @@
+import { ProviderDetails } from 'src/providers/models/result';
+
 export interface UserResult {
   userId: number;
   firstName: string;
@@ -6,20 +8,19 @@ export interface UserResult {
   createdAt: string;
   isClient: boolean;
   isProvider: boolean;
-  provider: Provider;
+  provider: ProviderDetails;
 }
 
-export interface Provider {
-  companyName: string;
-  address: string;
-  phoneNumber: string;
-  availableDays: string[];
-  workHours: string;
-  description: string;
-  category: ProviderCategory[];
-}
-
-export interface ProviderCategory {
-  categoryId: number;
-  categoryName: string;
+export class AuthUserResult {
+  userId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  password: string;
+  createdAt: string;
+  inactive: string;
+  isClient: boolean;
+  isProvider: boolean;
+  clientId: number;
+  providerId: number;
 }

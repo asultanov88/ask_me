@@ -1,12 +1,4 @@
-import {
-  IsBoolean,
-  IsEmail,
-  IsInt,
-  IsNotEmpty,
-  Max,
-  Min,
-  ValidateIf
-} from 'class-validator';
+import { IsBoolean, IsEmail, IsNotEmpty } from 'class-validator';
 
 export class UserDto {
   userId: number = null;

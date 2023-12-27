@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { UserDto } from './models/dto';
 import * as bcrypt from 'bcrypt';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
-import { UserResult } from './models/result';
+import { AuthUserResult, UserResult } from './models/result';
 import { REQUEST } from '@nestjs/core';
 
 @Injectable({ scope: Scope.REQUEST })
@@ -22,7 +22,7 @@ export class UsersService {
   ) {}
 
   // Gets user by email.
-  async getUserByEmail(email: string): Promise<UserDto> {
+  async getUserByEmail(email: string): Promise<AuthUserResult> {
     const databaseParams: DatabaseParam[] = [
       {
         inputParamName: 'Email',
@@ -34,7 +34,9 @@ export class UsersService {
     try {
       const resultSet = await this.database.query(dbQuery);
       const parsedResult = this.mssql.parseSingleResultSet(resultSet);
-      return parsedResult ? (parsedResult as UserDto) : ({} as UserDto);
+      return parsedResult
+        ? (parsedResult as AuthUserResult)
+        : ({} as AuthUserResult);
     } catch (error) {
       this.errorHandler.throwDatabaseError(error);
     }

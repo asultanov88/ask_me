@@ -5,9 +5,9 @@ import { MsSql } from 'src/database/typeorm/mssql';
 import { Repository } from 'typeorm';
 import { UsersService } from 'src/users/users.service';
 import { UserLogin } from './models/dto';
-import { UserDto } from 'src/users/models/dto';
 import * as bcrypt from 'bcrypt';
 import { JwtService } from '@nestjs/jwt';
+import { AuthUserResult } from 'src/users/models/result';
 
 @Injectable()
 export class AuthService {
@@ -21,7 +21,7 @@ export class AuthService {
 
   // Authenticates user login.
   async login(userLogin: UserLogin): Promise<any> {
-    const user: UserDto = await this.userService.getUserByEmail(
+    const user: AuthUserResult = await this.userService.getUserByEmail(
       userLogin.email
     );
 
@@ -32,6 +32,13 @@ export class AuthService {
         (await bcrypt.hash(userLogin.password, process.env.SALT_KEY))
     ) {
       const payload = { userId: user.userId, username: user.email };
+      if (user.isClient) {
+        payload['clientId'] = user.clientId;
+      }
+      if (user.isProvider) {
+        payload['providerId'] = user.providerId;
+      }
+
       return {
         accessToken: await this.jwtService.signAsync(payload)
       };
