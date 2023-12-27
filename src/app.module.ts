@@ -2,6 +2,7 @@ import {
   MiddlewareConsumer,
   Module,
   NestModule,
+  RequestMethod,
   ValidationPipe
 } from '@nestjs/common';
 import { AppController } from './app.controller';
@@ -47,6 +48,12 @@ import { APP_PIPE } from '@nestjs/core';
 })
 export class AppModule implements NestModule {
   public configure(consumer: MiddlewareConsumer): void {
-    consumer.apply(AuthMiddleware).exclude('/auth/login').forRoutes('*');
+    consumer
+      .apply(AuthMiddleware)
+      .exclude(
+        { path: '/auth/login', method: RequestMethod.POST },
+        { path: '/users/user', method: RequestMethod.POST }
+      )
+      .forRoutes('*');
   }
 }

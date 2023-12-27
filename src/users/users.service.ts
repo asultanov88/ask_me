@@ -1,4 +1,4 @@
-import { Injectable } from '@nestjs/common';
+import { Inject, Injectable, Scope } from '@nestjs/common';
 import { InjectRepository } from '@nestjs/typeorm';
 import { DatabaseEntity } from 'src/database/entities/database';
 import { TableTypes } from 'src/database/table-types/table-types';
@@ -8,14 +8,17 @@ import { Repository } from 'typeorm';
 import { UserDto } from './models/dto';
 import * as bcrypt from 'bcrypt';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
+import { UserResult } from './models/result';
+import { REQUEST } from '@nestjs/core';
 
-@Injectable()
+@Injectable({ scope: Scope.REQUEST })
 export class UsersService {
   constructor(
     @InjectRepository(DatabaseEntity)
     private database: Repository<null>,
     private mssql: MsSql,
-    private errorHandler: ErrorHandler
+    private errorHandler: ErrorHandler,
+    @Inject(REQUEST) private readonly request: Request
   ) {}
 
   // Gets user by email.
@@ -69,5 +72,10 @@ export class UsersService {
     } catch (error) {
       this.errorHandler.throwDatabaseError(error);
     }
+  }
+
+  public getMyUserProfile(): Promise<UserResult> {
+    console.log(this.request['user']);
+    return null;
   }
 }

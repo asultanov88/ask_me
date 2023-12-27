@@ -1,4 +1,4 @@
-import { Body, Controller, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post } from '@nestjs/common';
 import { UsersService } from './users.service';
 import { UserDto } from './models/dto';
 import { UserResult } from './models/result';
@@ -7,9 +7,9 @@ import { UserResult } from './models/result';
 export class UsersController {
   constructor(private readonly userService: UsersService) {}
 
-  @Post('me')
+  @Get('me')
   async getMyUserProfile(): Promise<UserResult> {
-    return null;
+    return await this.userService.getMyUserProfile();
   }
 
   @Post('user')
