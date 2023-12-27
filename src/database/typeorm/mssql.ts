@@ -50,7 +50,7 @@ export class MsSql {
   ): string {
     let query: string = '';
     const queryParams: ProcessedQueryParam[] = [];
-    params.forEach((p, index) => {
+    params?.forEach((p, index) => {
       queryParams.push(this.parseParam(p, index));
     });
     queryParams?.forEach((qp) => {
@@ -59,7 +59,9 @@ export class MsSql {
       }
     });
 
-    query += `${this.newLine}EXEC [dbo].[${storedProcedurename}]${this.blank}`;
+    query += `${this.newLine}EXEC [dbo].[${storedProcedurename}]${
+      queryParams?.length > 0 ? this.blank : ''
+    }`;
     queryParams?.forEach((qp, qpIndex) => {
       if (qp && qp.declarationnName) {
         query += `@${qp.paramName}=${qp.declarationnName}${
@@ -103,6 +105,8 @@ export class MsSql {
           const paramValue =
             bulkParamObj[f] ?? bulkParamObj[this.firstCharToLowerCase(f)];
           query += `${
+            paramValue === null ||
+            paramValue === undefined ||
             paramValue?.toString()?.toLowerCase() === 'null' ||
             paramValue?.toString()?.toLowerCase() === 'undefined' ||
             paramValue?.toString()?.trim() === ''
