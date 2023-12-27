@@ -39,8 +39,13 @@ export class UsersService {
 
   // Inserts a new user.
   async postUser(user: UserDto): Promise<number> {
-    if (user.isClient === 1 && user.isProvider === 1) {
+    if (user.isClient === true && user.isProvider === true) {
       this.errorHandler.throwCustomError('User cannot be Client and Provider.');
+    }
+    if (user.isClient === false && user.isProvider === false) {
+      this.errorHandler.throwCustomError(
+        'User must be either Client or Provider.'
+      );
     }
 
     user.password = await bcrypt.hash(user.password, process.env.SALT_KEY);

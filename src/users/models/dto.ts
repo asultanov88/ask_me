@@ -1,4 +1,5 @@
 import {
+  IsBoolean,
   IsEmail,
   IsInt,
   IsNotEmpty,
@@ -26,17 +27,9 @@ export class UserDto {
 
   inactive: string = null;
 
-  @ValidateIf((o) => o.isProvider === 0)
-  @IsNotEmpty()
-  @IsInt()
-  @Min(1)
-  @Max(1)
-  isClient: number = 0;
+  @IsBoolean()
+  isClient: boolean = false;
 
-  @ValidateIf((o) => o.isClient === 0)
-  @IsNotEmpty()
-  @IsInt()
-  @Min(1)
-  @Max(1)
-  isProvider: number = 0;
+  @IsBoolean()
+  isProvider: boolean = false;
 }

@@ -139,12 +139,6 @@ export class MsSql {
     return processedParam;
   }
 
-  // Escapes single quote, wraps string into single quotes
-  private escapeSql(input: string): string {
-    input = input?.replaceAll("'", "''");
-    return `'${input ? input : ''}'`;
-  }
-
   // Checks bulk insert DTO against the Table Type.
   private dtoTypeCheck(param: any, dtoType: any): DataKeyMismatch {
     const paramKeys: string[] = Object.keys(param);
@@ -165,5 +159,35 @@ export class MsSql {
 
   private firstCharToLowerCase(key: string): string {
     return key.charAt(0).toLowerCase() + key.slice(1);
+  }
+
+  // Escapes single quote, wraps string into single quotes
+  private escapeSql(input: string): string {
+    input = input?.replaceAll("'", "''");
+    const escapedResult: string = `'${input ? input : ''}'`;
+    return this.parseBoolean(escapedResult);
+  }
+
+  // Converts boolean to bit.
+  private parseBoolean(input: string): string {
+    const inputlowerCase: string = input?.trim()?.toLowerCase();
+    let boolToBit: string = null;
+
+    switch (inputlowerCase) {
+      case 'true': {
+        boolToBit = '1';
+        break;
+      }
+      case 'false': {
+        boolToBit = '0';
+        break;
+      }
+      default: {
+        boolToBit = input;
+        break;
+      }
+    }
+
+    return boolToBit;
   }
 }
