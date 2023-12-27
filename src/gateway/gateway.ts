@@ -9,6 +9,7 @@ import { Server } from 'socket.io';
 import { AuthGuard } from 'src/auth/auth.guard';
 import { SocketMessageDto } from './dto';
 import { GatewayService } from './gateway.service';
+import { Socket } from 'socket.io';
 
 @WebSocketGateway()
 export class Gateway implements OnModuleInit {
@@ -36,7 +37,14 @@ export class Gateway implements OnModuleInit {
   @UseGuards(AuthGuard)
   @SubscribeMessage('incomingMessage')
   onIncomingMessage(@MessageBody() body: SocketMessageDto) {
-    this.server.emit('outgoingMessage', body.message);
+    const receiverUserId: number = body.toUserId;
+    const receiverSocketId: string =
+      this.gatewayService.userSocketClinet.get(receiverUserId);
+    const receiverSocket: Socket =
+      this.gatewayService.connectedClients.get(receiverSocketId);
+    if (receiverSocket) {
+      receiverSocket.emit('outgoingMessage', body.message);
+    }
   }
 
   @UseGuards(AuthGuard)
