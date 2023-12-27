@@ -1,4 +1,9 @@
-export class LkWeekDay {
-  lkWeekDayId: number = null;
-  weekDay: string = null;
+export interface LkWeekDay {
+  lkWeekDayId: number;
+  weekDay: string;
+}
+
+export interface LkWorkHour {
+  lkWeekDayId: number;
+  weekDay: string;
 }
