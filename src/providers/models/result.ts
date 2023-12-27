@@ -41,6 +41,6 @@ export interface LkWorkHour {
 }
 
 export interface LkProviderCategory {
-  categoryId: number;
-  categoryName: string;
+  lkCategoryId: number;
+  name: string;
 }

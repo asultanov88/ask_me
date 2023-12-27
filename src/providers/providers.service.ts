@@ -5,7 +5,12 @@ import { Repository } from 'typeorm';
 import { MsSql } from 'src/database/typeorm/mssql';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { TableTypes } from 'src/database/table-types/table-types';
-import { LkWeekDay, LkWorkHour, ProviderDetails } from './models/result';
+import {
+  LkProviderCategory,
+  LkWeekDay,
+  LkWorkHour,
+  ProviderDetails
+} from './models/result';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
 import { REQUEST } from '@nestjs/core';
 import { ProviderDetailsDto, ProviderWorkHourDto } from './models/dto';
@@ -21,6 +26,18 @@ export class ProvidersService {
     private errorHandler: ErrorHandler,
     @Inject(REQUEST) private readonly request: Request
   ) {}
+
+  // Gets LkCategory lookup table values.
+  public async getCategories(): Promise<LkProviderCategory[]> {
+    const dbQuery = this.mssql.getQuery(null, 'UspGetLkCategories');
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const parsedResult = this.mssql.parseMultiResultSet(resultSet);
+      return parsedResult ? (parsedResult as LkProviderCategory[]) : [];
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
 
   // Gets LkWeekDay lookup table values.
   public async getWeekDays(): Promise<LkWeekDay[]> {

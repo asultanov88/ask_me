@@ -1,6 +1,11 @@
 import { Body, Controller, Get, Post } from '@nestjs/common';
 import { ProvidersService } from './providers.service';
-import { LkWeekDay, LkWorkHour, ProviderDetails } from './models/result';
+import {
+  LkProviderCategory,
+  LkWeekDay,
+  LkWorkHour,
+  ProviderDetails
+} from './models/result';
 import { BooleanResult } from 'src/database/table-types/shared-result';
 
 @Controller('providers')
@@ -22,5 +27,10 @@ export class ProvidersController {
   @Get('lk-work-hours')
   async getWorkHours(): Promise<LkWorkHour[]> {
     return await this.providersService.getWorkHours();
+  }
+
+  @Get('lk-category')
+  async getCategories(): Promise<LkProviderCategory[]> {
+    return await this.providersService.getCategories();
   }
 }
