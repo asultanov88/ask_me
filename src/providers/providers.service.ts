@@ -10,7 +10,8 @@ import {
   LkWeekDay,
   LkWorkHour,
   ProviderDetails,
-  ProviderDetailsResult
+  ProviderDetailsResult,
+  ProviderSearch
 } from './models/result';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
 import { REQUEST } from '@nestjs/core';
@@ -28,6 +29,38 @@ export class ProvidersService {
     @Inject(REQUEST) private readonly request: Request
   ) {}
 
+  // Provider search based on params.
+  async gerProviderSearch(searchParams: ProviderSearch): Promise<any> {
+    if (
+      !searchParams.lkCategoryId &&
+      (!searchParams.searchKeyword || searchParams.searchKeyword?.trim() === '')
+    ) {
+      this.errorHandler.throwCustomError(
+        'Both lkCategoryId and searchKeyword cannot be null.'
+      );
+    }
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'LkCategoryId',
+        parameterValue: this.mssql.convertToString(searchParams.lkCategoryId)
+      },
+      {
+        inputParamName: 'SearchKeyword',
+        parameterValue: this.mssql.convertToString(searchParams.searchKeyword)
+      }
+    ];
+
+    const dbQuery = this.mssql.getQuery(databaseParams, 'UspGetProviderSearch');
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const parsedResult = this.mssql.parseMultiResultSet(resultSet);
+      return parsedResult ? parsedResult : [];
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
+
   // Gets provider details.
   async getProviderDetails(): Promise<ProviderDetailsResult | any> {
     const providerId = this.request['user']?.providerId ?? null;
@@ -39,7 +72,7 @@ export class ProvidersService {
     const databaseParams: DatabaseParam[] = [
       {
         inputParamName: 'ProviderId',
-        parameterValue: providerId
+        parameterValue: this.mssql.convertToString(providerId)
       }
     ];
 

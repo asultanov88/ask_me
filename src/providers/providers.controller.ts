@@ -5,13 +5,19 @@ import {
   LkWeekDay,
   LkWorkHour,
   ProviderDetails,
-  ProviderDetailsResult
+  ProviderDetailsResult,
+  ProviderSearch
 } from './models/result';
 import { BooleanResult } from 'src/database/table-types/shared-result';
 
 @Controller('providers')
 export class ProvidersController {
   constructor(private readonly providersService: ProvidersService) {}
+
+  @Get('provider-search')
+  async gerProviderSearch(@Body() searchParams: ProviderSearch): Promise<any> {
+    return await this.providersService.gerProviderSearch(searchParams);
+  }
 
   @Get('details')
   async getProviderDetails(): Promise<ProviderDetailsResult | any> {

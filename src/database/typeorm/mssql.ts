@@ -15,6 +15,11 @@ export class MsSql {
   // New line.
   private readonly newLine: string = '\n';
 
+  // Convers value to string.
+  public convertToString(input: any): string {
+    return input?.toString()?.trim()?.length > 0 ? input.toString() : null;
+  }
+
   // Parses database result set array by changing key format to camel case.
   // Returns an array.
   public parseMultiResultSet(input: []): any[] {
@@ -134,7 +139,7 @@ export class MsSql {
       processedParam = {
         paramName: param.inputParamName,
         paramValue: this.escapeSql(
-          param.parameterValue ? param.parameterValue.toString() : ''
+          param.parameterValue ? param.parameterValue.toString() : 'NULL'
         ),
         declarationnName: null
       };
@@ -168,7 +173,12 @@ export class MsSql {
   // Escapes single quote, wraps string into single quotes
   private escapeSql(input: string): string {
     input = input?.replaceAll("'", "''");
-    const escapedResult: string = `'${input ? input : ''}'`;
+    let escapedResult: string = null;
+    if (input.toLowerCase().trim() !== 'null') {
+      escapedResult = `'${input ? input : ''}'`;
+    } else {
+      escapedResult = 'NULL';
+    }
     return this.parseBoolean(escapedResult);
   }
 

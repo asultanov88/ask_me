@@ -1,4 +1,33 @@
-import { IsNotEmpty } from 'class-validator';
+import {
+  ArrayNotEmpty,
+  IsArray,
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  ValidateIf
+} from 'class-validator';
+
+export class ProviderSearch {
+  @ValidateIf(
+    (val) =>
+      val.searchKeyword === null ||
+      val.searchKeyword === undefined ||
+      val.searchKeyword?.trim() === ''
+  )
+  @IsInt()
+  @IsNotEmpty()
+  lkCategoryId: number;
+
+  @ValidateIf(
+    (val) =>
+      val.lkCategoryId === null ||
+      val.lkCategoryId === undefined ||
+      val.lkCategoryId === 0
+  )
+  @IsString()
+  @IsNotEmpty()
+  searchKeyword: string;
+}
 
 export class ProviderDetails {
   @IsNotEmpty()
@@ -14,6 +43,8 @@ export class ProviderDetails {
   description: string;
 
   @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
   // Array of LkWeedDayId.
   availableDays: number[];
 
@@ -22,6 +53,8 @@ export class ProviderDetails {
 
   // Array if LkCategoryIds.
   @IsNotEmpty()
+  @IsArray()
+  @ArrayNotEmpty()
   category: number[];
 }
 
