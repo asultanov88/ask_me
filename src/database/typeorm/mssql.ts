@@ -89,10 +89,10 @@ export class MsSql {
 
     // Bulk value set using table type.
     if (param?.tableType?.typeName && param?.bulkParamValue?.length > 0) {
-      // Stop execution due to table type vs DTO type mismatch.
+      // Stop execution due to table type fields vs DTO type mismatch.
       const dataKeyMismatch: DataKeyMismatch = this.dtoTypeCheck(
         param.bulkParamValue[0],
-        param.tableType.dto
+        param.tableType.fields
       );
       if (dataKeyMismatch.mismatch) {
         // Throw error.
@@ -148,18 +148,17 @@ export class MsSql {
     return processedParam;
   }
 
-  // Checks bulk insert DTO against the Table Type.
-  private dtoTypeCheck(param: any, dtoType: any): DataKeyMismatch {
+  // Checks bulk insert DTO against the Table Type fields.
+  private dtoTypeCheck(param: any, tableTypeFields: string[]): DataKeyMismatch {
     const paramKeys: string[] = Object.keys(param);
-    const dtoKeys: string[] = Object.keys(dtoType);
     let dataKeyMismatch: DataKeyMismatch = {
       mismatch: false,
       paramKey: paramKeys,
-      dtoKey: dtoKeys
+      dtoKey: tableTypeFields
     };
 
     paramKeys.forEach((pk) => {
-      if (!dtoKeys.includes(pk)) {
+      if (!tableTypeFields.includes(pk)) {
         dataKeyMismatch.mismatch = true;
       }
     });

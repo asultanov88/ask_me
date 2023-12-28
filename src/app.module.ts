@@ -15,6 +15,7 @@ import { AuthModule } from './auth/auth.module';
 import { UsersModule } from './users/users.module';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { APP_PIPE } from '@nestjs/core';
+import { MessagesModule } from './messages/messages.module';
 
 @Module({
   imports: [
@@ -32,7 +33,8 @@ import { APP_PIPE } from '@nestjs/core';
     GatewayModule,
     ProvidersModule,
     AuthModule,
-    UsersModule
+    UsersModule,
+    MessagesModule
   ],
   controllers: [AppController],
   providers: [

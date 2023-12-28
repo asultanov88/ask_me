@@ -4,6 +4,7 @@ import {
   ProviderDetailsDto,
   ProviderWorkHourDto
 } from 'src/providers/models/dto';
+import { SubjectDto } from 'src/messages/model/dto/dto';
 
 export class TableTypes {
   public static UserTableType: TableType = {
@@ -50,6 +51,12 @@ export class TableTypes {
       'toLkWorkHourId'
     ],
     dto: new ProviderWorkHourDto()
+  };
+
+  public static SubjectTableType: TableType = {
+    typeName: 'SubjectTableType',
+    fields: ['subjectId', 'providerId', 'clientId', 'title', 'deleted'],
+    dto: new SubjectDto()
   };
 }
 
