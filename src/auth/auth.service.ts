@@ -39,8 +39,12 @@ export class AuthService {
         payload['providerId'] = user.providerId;
       }
 
+      // Remove password property from user object.
+      delete user.password;
+
       return {
-        accessToken: await this.jwtService.signAsync(payload)
+        accessToken: await this.jwtService.signAsync(payload),
+        user: user
       };
     } else {
       throw new UnauthorizedException();
