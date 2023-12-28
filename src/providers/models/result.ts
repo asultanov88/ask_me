@@ -25,6 +25,14 @@ export class ProviderDetails {
   category: number[];
 }
 
+export interface ProviderDetailsResult {
+  companyName: string;
+  address: string;
+  phoneNumber: string;
+  description: string;
+  workHours: string;
+}
+
 export interface WorkHourSchedule {
   fromWorkHourId: number;
   toWorkHourId: number;

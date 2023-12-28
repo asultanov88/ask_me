@@ -4,13 +4,19 @@ import {
   LkProviderCategory,
   LkWeekDay,
   LkWorkHour,
-  ProviderDetails
+  ProviderDetails,
+  ProviderDetailsResult
 } from './models/result';
 import { BooleanResult } from 'src/database/table-types/shared-result';
 
 @Controller('providers')
 export class ProvidersController {
   constructor(private readonly providersService: ProvidersService) {}
+
+  @Get('details')
+  async getProviderDetails(): Promise<ProviderDetailsResult | any> {
+    return await this.providersService.getProviderDetails();
+  }
 
   @Post('details')
   async postProviderDetails(

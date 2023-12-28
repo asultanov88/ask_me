@@ -9,7 +9,8 @@ import {
   LkProviderCategory,
   LkWeekDay,
   LkWorkHour,
-  ProviderDetails
+  ProviderDetails,
+  ProviderDetailsResult
 } from './models/result';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
 import { REQUEST } from '@nestjs/core';
@@ -26,6 +27,59 @@ export class ProvidersService {
     private errorHandler: ErrorHandler,
     @Inject(REQUEST) private readonly request: Request
   ) {}
+
+  // Gets provider details.
+  async getProviderDetails(): Promise<ProviderDetailsResult | any> {
+    const providerId = this.request['user']?.providerId ?? null;
+    if (!providerId) {
+      this.errorHandler.throwCustomError('ProviderId not found.');
+    }
+
+    // The same param is used for all 3 SPs.
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'ProviderId',
+        parameterValue: providerId
+      }
+    ];
+
+    const dbQueryProviderDetails = this.mssql.getQuery(
+      databaseParams,
+      'UspGetProviderDetails'
+    );
+
+    const dbQueryProviderWeekDays = this.mssql.getQuery(
+      databaseParams,
+      'UspGetProviderWeekDays'
+    );
+
+    const dbQueryProviderCategories = this.mssql.getQuery(
+      databaseParams,
+      'UspGetProviderCategory'
+    );
+    try {
+      const providerDetails = this.mssql.parseSingleResultSet(
+        await this.database.query(dbQueryProviderDetails)
+      );
+      const providerWeekDays = this.mssql.parseMultiResultSet(
+        await this.database.query(dbQueryProviderWeekDays)
+      );
+      const providerCategories = this.mssql.parseMultiResultSet(
+        await this.database.query(dbQueryProviderCategories)
+      );
+
+      if (providerWeekDays?.length > 0) {
+        providerDetails.availableDays = providerWeekDays as LkWeekDay[];
+      }
+      if (providerCategories?.length > 0) {
+        providerDetails.category = providerCategories as LkProviderCategory[];
+      }
+
+      return providerDetails ? (providerDetails as ProviderDetailsResult) : {};
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
 
   // Gets LkCategory lookup table values.
   public async getCategories(): Promise<LkProviderCategory[]> {
