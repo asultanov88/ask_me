@@ -6,7 +6,8 @@ import {
   LkWorkHour,
   ProviderDetails,
   ProviderDetailsResult,
-  ProviderSearch
+  ProviderSearch,
+  SelectProvider
 } from './models/result';
 import { BooleanResult } from 'src/database/table-types/shared-result';
 
@@ -14,9 +15,18 @@ import { BooleanResult } from 'src/database/table-types/shared-result';
 export class ProvidersController {
   constructor(private readonly providersService: ProvidersService) {}
 
+  @Post('select-provider')
+  async postSelectProvider(
+    @Body() selectProvider: SelectProvider
+  ): Promise<any> {
+    return await this.providersService.postSelectProvider(
+      selectProvider.providerId
+    );
+  }
+
   @Get('provider-search')
-  async gerProviderSearch(@Body() searchParams: ProviderSearch): Promise<any> {
-    return await this.providersService.gerProviderSearch(searchParams);
+  async getProviderSearch(@Body() searchParams: ProviderSearch): Promise<any> {
+    return await this.providersService.getProviderSearch(searchParams);
   }
 
   @Get('details')

@@ -75,9 +75,4 @@ export class UsersService {
       this.errorHandler.throwDatabaseError(error);
     }
   }
-
-  public getMyUserProfile(): Promise<UserResult> {
-    console.log(this.request['user']);
-    return null;
-  }
 }

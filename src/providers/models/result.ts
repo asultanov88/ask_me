@@ -4,6 +4,7 @@ import {
   IsInt,
   IsNotEmpty,
   IsString,
+  Min,
   ValidateIf
 } from 'class-validator';
 
@@ -56,6 +57,13 @@ export class ProviderDetails {
   @IsArray()
   @ArrayNotEmpty()
   category: number[];
+}
+
+export class SelectProvider {
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  providerId: number;
 }
 
 export interface ProviderDetailsResult {

@@ -5,9 +5,7 @@ export class SubjectDto {
 
   @IsNotEmpty()
   @IsInt()
-  providerId: number;
-
-  clientId: number;
+  clientProviderId: number;
 
   @IsNotEmpty()
   @IsString()

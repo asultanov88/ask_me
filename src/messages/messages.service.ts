@@ -21,9 +21,9 @@ export class MessagesService {
 
   // Posts new subject.
   async postNewSubject(@Body() subject: SubjectDto): Promise<any> {
-    subject.clientId = this.request['user'].clientId;
-    if (!subject.clientId) {
-      this.errorHandler.throwCustomError('Only clients can  create a subject.');
+    const clientId = this.request['user'].clientId;
+    if (!clientId) {
+      this.errorHandler.throwCustomError('Only client can create a subject.');
     }
 
     const databaseParams: DatabaseParam[] = [
@@ -31,6 +31,10 @@ export class MessagesService {
         inputParamName: 'Subject',
         bulkParamValue: [subject],
         tableType: TableTypes.SubjectTableType
+      },
+      {
+        inputParamName: 'ClientId',
+        parameterValue: this.mssql.convertToString(clientId)
       }
     ];
 
