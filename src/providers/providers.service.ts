@@ -6,6 +6,7 @@ import { MsSql } from 'src/database/typeorm/mssql';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { TableTypes } from 'src/database/table-types/table-types';
 import {
+  ClientProvider,
   LkProviderCategory,
   LkWeekDay,
   LkWorkHour,
@@ -29,6 +30,30 @@ export class ProvidersService {
     private errorHandler: ErrorHandler,
     @Inject(REQUEST) private readonly request: Request
   ) {}
+
+  // Gets client's provider list.
+  async getMyProviders(): Promise<any> {
+    const clientId = this.request['user'].clientId;
+    if (!clientId) {
+      this.errorHandler.throwCustomError('Invalied client id.');
+    }
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'ClientId',
+        parameterValue: this.mssql.convertToString(clientId)
+      }
+    ];
+
+    const dbQuery = this.mssql.getQuery(databaseParams, 'UspGetMyProviders');
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const parsedResult = this.mssql.parseMultiResultSet(resultSet);
+      return parsedResult ? (parsedResult as ClientProvider[]) : [];
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
 
   // Selects provider.
   async postSelectProvider(providerId: number): Promise<any> {

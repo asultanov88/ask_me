@@ -15,6 +15,11 @@ import { BooleanResult } from 'src/database/table-types/shared-result';
 export class ProvidersController {
   constructor(private readonly providersService: ProvidersService) {}
 
+  @Get('my-providers')
+  async getMyProviders(): Promise<any> {
+    return await this.providersService.getMyProviders();
+  }
+
   @Post('select-provider')
   async postSelectProvider(
     @Body() selectProvider: SelectProvider

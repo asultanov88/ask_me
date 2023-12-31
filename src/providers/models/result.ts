@@ -66,6 +66,19 @@ export class SelectProvider {
   providerId: number;
 }
 
+export interface ClientProvider {
+  clientProviderId;
+  providerId: number;
+  providerUserId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  companyname: string;
+  address: string;
+  phoneNumber: string;
+  description: string;
+}
+
 export interface ProviderDetailsResult {
   companyName: string;
   address: string;
