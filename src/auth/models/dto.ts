@@ -1,4 +1,4 @@
-import { IsEmail, IsNotEmpty } from 'class-validator';
+import { IsEmail, IsNotEmpty, IsString } from 'class-validator';
 
 export class UserLogin {
   @IsEmail()
@@ -6,6 +6,12 @@ export class UserLogin {
 
   @IsNotEmpty()
   password: string;
+}
+
+export class RefreshToken {
+  @IsNotEmpty()
+  @IsString()
+  accessToken: string;
 }
 
 export class AuthorisedUser {

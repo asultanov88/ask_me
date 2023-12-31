@@ -31,7 +31,14 @@ export class ProvidersController {
 
   @Get('details')
   async getProviderDetails(): Promise<ProviderDetailsResult | any> {
-    return await this.providersService.getProviderDetails();
+    return await this.providersService.getProviderDetails(null);
+  }
+
+  @Get('details-by-provider-id')
+  async getProviderDetailsById(
+    @Body() providerSearch: SelectProvider
+  ): Promise<ProviderDetailsResult | any> {
+    return await this.providersService.getProviderDetails(providerSearch);
   }
 
   @Post('details')

@@ -11,7 +11,8 @@ import {
   LkWorkHour,
   ProviderDetails,
   ProviderDetailsResult,
-  ProviderSearch
+  ProviderSearch,
+  SelectProvider
 } from './models/result';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
 import { REQUEST } from '@nestjs/core';
@@ -98,8 +99,19 @@ export class ProvidersService {
   }
 
   // Gets provider details.
-  async getProviderDetails(): Promise<ProviderDetailsResult | any> {
-    const providerId = this.request['user']?.providerId ?? null;
+  async getProviderDetails(
+    providerSearch: SelectProvider
+  ): Promise<ProviderDetailsResult | any> {
+    console.log(this.request['user']);
+
+    if (providerSearch?.providerId && !this.request['user'].clientId) {
+      this.errorHandler.throwCustomError(
+        'Only clients can get provider by id.'
+      );
+    }
+    const providerId = providerSearch
+      ? providerSearch?.providerId
+      : this.request['user']?.providerId ?? null;
     if (!providerId) {
       this.errorHandler.throwCustomError('ProviderId not found.');
     }
