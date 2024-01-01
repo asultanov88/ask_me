@@ -93,9 +93,6 @@ export class ProvidersService {
 
   // Provider search based on params.
   async getProviderSearch(searchParams: ProviderSearch): Promise<any> {
-    if (searchParams.lkCategoryId && isNaN(searchParams.lkCategoryId)) {
-      this.errorHandler.throwCustomError('lkCategoryId must be a number.');
-    }
     if (
       !searchParams.lkCategoryId &&
       (!searchParams.searchKeyword || searchParams.searchKeyword?.trim() === '')

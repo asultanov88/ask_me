@@ -29,13 +29,9 @@ export class ProvidersController {
     );
   }
 
-  @Get('provider-search')
-  async getProviderSearch(@Query() query): Promise<any> {
-    const providerSearch: ProviderSearch = {
-      lkCategoryId: query.lkCategoryId,
-      searchKeyword: query.searchKeyword
-    };
-    return await this.providersService.getProviderSearch(providerSearch);
+  @Post('provider-search')
+  async getProviderSearch(@Body() body: ProviderSearch): Promise<any> {
+    return await this.providersService.getProviderSearch(body);
   }
 
   @Get('details')
