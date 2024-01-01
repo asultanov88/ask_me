@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post } from '@nestjs/common';
+import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { ProvidersService } from './providers.service';
 import {
   LkProviderCategory,
@@ -29,9 +29,13 @@ export class ProvidersController {
     );
   }
 
-  @Post('provider-search')
-  async getProviderSearch(@Body() searchParams: ProviderSearch): Promise<any> {
-    return await this.providersService.getProviderSearch(searchParams);
+  @Get('provider-search')
+  async getProviderSearch(@Query() query): Promise<any> {
+    const providerSearch: ProviderSearch = {
+      lkCategoryId: query.lkCategoryId,
+      searchKeyword: query.searchKeyword
+    };
+    return await this.providersService.getProviderSearch(providerSearch);
   }
 
   @Get('details')
@@ -41,9 +45,9 @@ export class ProvidersController {
 
   @Get('details-by-provider-id')
   async getProviderDetailsById(
-    @Body() providerSearch: SelectProvider
+    @Query() query
   ): Promise<ProviderDetailsResult | any> {
-    return await this.providersService.getProviderDetails(providerSearch);
+    return await this.providersService.getProviderDetails(query.providerId);
   }
 
   @Post('details')

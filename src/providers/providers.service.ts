@@ -93,6 +93,9 @@ export class ProvidersService {
 
   // Provider search based on params.
   async getProviderSearch(searchParams: ProviderSearch): Promise<any> {
+    if (searchParams.lkCategoryId && isNaN(searchParams.lkCategoryId)) {
+      this.errorHandler.throwCustomError('lkCategoryId must be a number.');
+    }
     if (
       !searchParams.lkCategoryId &&
       (!searchParams.searchKeyword || searchParams.searchKeyword?.trim() === '')
@@ -125,20 +128,16 @@ export class ProvidersService {
 
   // Gets provider details.
   async getProviderDetails(
-    providerSearch: SelectProvider
+    providerId: number
   ): Promise<ProviderDetailsResult | any> {
-    console.log(this.request['user']);
+    if (!providerId) {
+      this.errorHandler.throwCustomError('ProviderId not found.');
+    }
 
-    if (providerSearch?.providerId && !this.request['user'].clientId) {
+    if (providerId && !this.request['user'].clientId) {
       this.errorHandler.throwCustomError(
         'Only clients can get provider by id.'
       );
-    }
-    const providerId = providerSearch
-      ? providerSearch?.providerId
-      : this.request['user']?.providerId ?? null;
-    if (!providerId) {
-      this.errorHandler.throwCustomError('ProviderId not found.');
     }
 
     // The same param is used for all 3 SPs.
