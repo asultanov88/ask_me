@@ -29,7 +29,7 @@ export class ProvidersController {
     );
   }
 
-  @Get('provider-search')
+  @Post('provider-search')
   async getProviderSearch(@Body() searchParams: ProviderSearch): Promise<any> {
     return await this.providersService.getProviderSearch(searchParams);
   }
