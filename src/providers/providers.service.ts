@@ -127,6 +127,9 @@ export class ProvidersService {
   async getProviderDetails(
     providerId: number
   ): Promise<ProviderDetailsResult | any> {
+    if (isNaN(providerId)) {
+      this.errorHandler.throwCustomError('ProviderId must be a number.');
+    }
     if (!providerId) {
       this.errorHandler.throwCustomError('ProviderId not found.');
     }
