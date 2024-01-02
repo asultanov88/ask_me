@@ -127,17 +127,14 @@ export class ProvidersService {
   async getProviderDetails(
     providerId: number
   ): Promise<ProviderDetailsResult | any> {
+    if (!providerId) {
+      providerId = this.request['user'].providerId;
+    }
     if (isNaN(providerId)) {
       this.errorHandler.throwCustomError('ProviderId must be a number.');
     }
     if (!providerId) {
       this.errorHandler.throwCustomError('ProviderId not found.');
-    }
-
-    if (providerId && !this.request['user'].clientId) {
-      this.errorHandler.throwCustomError(
-        'Only clients can get provider by id.'
-      );
     }
 
     // The same param is used for all 3 SPs.
