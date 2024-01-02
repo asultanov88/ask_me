@@ -55,42 +55,6 @@ export class ProvidersService {
     }
   }
 
-  // Selects provider.
-  async postSelectProvider(providerId: number): Promise<any> {
-    console.log(providerId);
-
-    const clientId = this.request['user'].clientId;
-    if (!clientId) {
-      this.errorHandler.throwCustomError('Only clients can select provider.');
-    }
-    if (!providerId || providerId === 0) {
-      this.errorHandler.throwCustomError('ProviderId must be supplied.');
-    }
-
-    const databaseParams: DatabaseParam[] = [
-      {
-        inputParamName: 'ProviderId',
-        parameterValue: this.mssql.convertToString(providerId)
-      },
-      {
-        inputParamName: 'ClientId',
-        parameterValue: this.mssql.convertToString(clientId)
-      }
-    ];
-
-    const dbQuery = this.mssql.getQuery(
-      databaseParams,
-      'UspInsertClientProvider'
-    );
-    try {
-      const resultSet = await this.database.query(dbQuery);
-      const parsedResult = this.mssql.parseSingleResultSet(resultSet);
-      return parsedResult ? parsedResult : {};
-    } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
-    }
-  }
-
   // Provider search based on params.
   async getProviderSearch(searchParams: ProviderSearch): Promise<any> {
     if (

@@ -55,7 +55,7 @@ export class TableTypes {
 
   public static SubjectTableType: TableType = {
     typeName: 'SubjectTableType',
-    fields: ['subjectId', 'clientProviderId', 'title', 'deleted'],
+    fields: ['subjectId', 'clientProviderId', 'providerId', 'title', 'deleted'],
     dto: new SubjectDto()
   };
 }

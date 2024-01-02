@@ -20,15 +20,6 @@ export class ProvidersController {
     return await this.providersService.getMyProviders();
   }
 
-  @Post('select-provider')
-  async postSelectProvider(
-    @Body() selectProvider: SelectProvider
-  ): Promise<any> {
-    return await this.providersService.postSelectProvider(
-      selectProvider.providerId
-    );
-  }
-
   @Post('provider-search')
   async getProviderSearch(@Body() body: ProviderSearch): Promise<any> {
     return await this.providersService.getProviderSearch(body);

@@ -25,6 +25,11 @@ export class MessagesService {
     if (!clientId) {
       this.errorHandler.throwCustomError('Only client can create a subject.');
     }
+    if (subject.clientProviderId && subject.providerId) {
+      this.errorHandler.throwCustomError(
+        'Either clientProviderId or providerId must be supplied.'
+      );
+    }
 
     const databaseParams: DatabaseParam[] = [
       {
