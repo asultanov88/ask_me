@@ -37,11 +37,12 @@ export class Gateway implements OnModuleInit {
   @UseGuards(AuthGuard)
   @SubscribeMessage('incomingMessage')
   onIncomingMessage(@MessageBody() body: SocketMessageDto) {
-    const receiverUserId: number = body.toUserId;
+    const receiverUserId: number = parseInt(body.toUserId?.toString(), 10);
     const receiverSocketId: string =
       this.gatewayService.userSocketClinet.get(receiverUserId);
     const receiverSocket: Socket =
       this.gatewayService.connectedClients.get(receiverSocketId);
+
     if (receiverSocket) {
       receiverSocket.emit('outgoingMessage', body.message);
     }

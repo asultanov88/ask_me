@@ -1,5 +1,19 @@
 import { IsInt, IsNotEmpty, IsString, Min, ValidateIf } from 'class-validator';
 
+export class MessageDto {
+  messageId: number;
+
+  @IsNotEmpty()
+  @IsString()
+  message: string;
+
+  createdBy: number;
+
+  createdAt: string;
+
+  viewed: boolean;
+}
+
 export class SubjectDto {
   subjectId: number;
 
