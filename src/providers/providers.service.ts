@@ -35,7 +35,7 @@ export class ProvidersService {
   async getMyProviders(): Promise<any> {
     const clientId = this.request['user'].clientId;
     if (!clientId) {
-      this.errorHandler.throwCustomError('Invalied client id.');
+      this.errorHandler.throwCustomError('Invalid client id.');
     }
 
     const databaseParams: DatabaseParam[] = [
