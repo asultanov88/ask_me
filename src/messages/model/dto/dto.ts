@@ -1,4 +1,11 @@
-import { IsInt, IsNotEmpty, IsString, Min, ValidateIf } from 'class-validator';
+import {
+  IsInstance,
+  IsInt,
+  IsNotEmpty,
+  IsString,
+  Min,
+  ValidateIf
+} from 'class-validator';
 
 export class MessageDto {
   messageId: number;
@@ -14,25 +21,20 @@ export class MessageDto {
   viewed: boolean;
 }
 
+export class NewMessage {
+  @IsNotEmpty()
+  @IsInt()
+  @Min(1)
+  subjectId: number;
+
+  @IsNotEmpty()
+  @IsString()
+  message: string;
+}
+
 export class SubjectDto {
   subjectId: number;
 
-  @ValidateIf(
-    (val) =>
-      val.providerId === null ||
-      val.providerId === undefined ||
-      val.providerId === 0
-  )
-  @IsNotEmpty()
-  @IsInt()
-  clientProviderId: number;
-
-  @ValidateIf(
-    (val) =>
-      val.clientProviderId === null ||
-      val.clientProviderId === undefined ||
-      val.clientProviderId === 0
-  )
   @IsNotEmpty()
   @IsInt()
   @Min(1)

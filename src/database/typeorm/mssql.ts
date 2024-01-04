@@ -173,7 +173,11 @@ export class MsSql {
   private escapeSql(input: string): string {
     input = input?.replaceAll("'", "''");
     let escapedResult: string = null;
-    if (input.toLowerCase().trim() !== 'null') {
+    if (
+      input.toLowerCase().trim() !== 'null' &&
+      input.toLowerCase().trim() !== 'true' &&
+      input.toLowerCase().trim() !== 'false'
+    ) {
       escapedResult = `'${input ? input : ''}'`;
     } else {
       escapedResult = 'NULL';
