@@ -6,8 +6,7 @@ import {
   LkWorkHour,
   ProviderDetails,
   ProviderDetailsResult,
-  ProviderSearch,
-  SelectProvider
+  ProviderSearch
 } from './models/result';
 import { BooleanResult } from 'src/database/table-types/shared-result';
 

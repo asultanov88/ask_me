@@ -6,6 +6,15 @@ import { NewMessage, SubjectDto } from './model/dto/dto';
 export class MessagesController {
   constructor(private readonly messageService: MessagesService) {}
 
+  @Get('subject-messages')
+  async getSubjectMessages(@Query() query): Promise<any> {
+    return await this.messageService.getSubjectMessages(
+      query.subjectId,
+      query.chunkCount,
+      query.chunkNum
+    );
+  }
+
   @Post('subject')
   async postNewSubject(@Body() subject: SubjectDto): Promise<any> {
     return await this.messageService.postNewSubject(subject);

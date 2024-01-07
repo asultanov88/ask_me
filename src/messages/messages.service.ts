@@ -8,7 +8,7 @@ import { Repository } from 'typeorm';
 import { MessageDto, NewMessage, SubjectDto } from './model/dto/dto';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { TableTypes } from 'src/database/table-types/table-types';
-import { ClientProviderMessage } from './model/result/result';
+import { ClientProviderMessage, Message } from './model/result/result';
 
 @Injectable()
 export class MessagesService {
@@ -20,6 +20,61 @@ export class MessagesService {
     @Inject(REQUEST) private readonly request: Request
   ) {}
 
+  async getSubjectMessages(
+    subjectId: number,
+    chunkCount: number,
+    chunkNum: number
+  ): Promise<any> {
+    if (!subjectId || isNaN(subjectId)) {
+      this.errorHandler.throwCustomError(
+        'subjectId is required and must be a number.'
+      );
+    }
+    if (!chunkCount || isNaN(chunkCount)) {
+      this.errorHandler.throwCustomError(
+        'chunkCount is required and must be a number.'
+      );
+    }
+    if (!chunkNum || isNaN(chunkNum)) {
+      this.errorHandler.throwCustomError(
+        'chunkNum is required and must be a number.'
+      );
+    }
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'SubjectId',
+        parameterValue: this.mssql.convertToString(subjectId)
+      },
+      {
+        inputParamName: 'ChunkCount',
+        parameterValue: this.mssql.convertToString(chunkCount)
+      },
+      {
+        inputParamName: 'ChunkNum',
+        parameterValue: this.mssql.convertToString(chunkNum)
+      },
+      {
+        inputParamName: 'ClientId',
+        parameterValue: this.request['user'].clientId
+      }
+    ];
+
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspGetSubjectMessages'
+    );
+
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const resultObj = this.mssql.parseMultiResultSet(resultSet);
+      return resultObj ? (resultObj as Message[]) : [];
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
+
+  // Gets subject list between the selected provider and a client.
   async getClientProviderSubjects(providerId: number): Promise<any> {
     if (isNaN(providerId)) {
       this.errorHandler.throwCustomError('ProviderId is invalid.');
