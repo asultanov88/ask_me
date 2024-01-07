@@ -10,6 +10,7 @@ import {
   LkProviderCategory,
   LkWeekDay,
   LkWorkHour,
+  ProviderClient,
   ProviderDetails,
   ProviderDetailsResult,
   ProviderSearch,
@@ -30,6 +31,34 @@ export class ProvidersService {
     private errorHandler: ErrorHandler,
     @Inject(REQUEST) private readonly request: Request
   ) {}
+
+  // Gets provider's client list.
+  async getMyClients(): Promise<any> {
+    const providerId = this.request['user'].providerId;
+
+    if (!providerId) {
+      this.errorHandler.throwCustomError('ProviderId is not found.');
+    }
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'ProviderId',
+        parameterValue: this.mssql.convertToString(providerId)
+      }
+    ];
+
+    const dbQuery = this.mssql.getQuery(
+      databaseParams,
+      'UspGetProviderClients'
+    );
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const parsedResult = this.mssql.parseMultiResultSet(resultSet);
+      return parsedResult ? (parsedResult as ProviderClient[]) : [];
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
 
   // Gets client's provider list.
   async getMyProviders(): Promise<any> {

@@ -66,6 +66,15 @@ export class SelectProvider {
   providerId: number;
 }
 
+export interface ProviderClient {
+  clientId: number;
+  clientUserId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
+  newMessage: boolean;
+}
+
 export interface ClientProvider {
   clientProviderId;
   providerId: number;
@@ -77,6 +86,7 @@ export interface ClientProvider {
   address: string;
   phoneNumber: string;
   description: string;
+  newMessage: boolean;
 }
 
 export interface ProviderDetailsResult {

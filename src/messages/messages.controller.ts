@@ -31,4 +31,9 @@ export class MessagesController {
       query.providerId
     );
   }
+
+  @Get('provider-client-subjects')
+  async getProviderClientSubjects(@Query() query): Promise<any> {
+    return await this.messageService.getProviderClientSubjects(query.clientId);
+  }
 }

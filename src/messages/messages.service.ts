@@ -20,6 +20,38 @@ export class MessagesService {
     @Inject(REQUEST) private readonly request: Request
   ) {}
 
+  // Gets subject list between provider and a client.
+  async getProviderClientSubjects(clientId: number): Promise<any> {
+    if (!clientId || isNaN(clientId)) {
+      this.errorHandler.throwCustomError('clientId is not provided.');
+    }
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'ClientId',
+        parameterValue: this.mssql.convertToString(clientId)
+      },
+      {
+        inputParamName: 'ProviderId',
+        parameterValue: this.request['user'].providerId
+      }
+    ];
+
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspGetClientSubjects'
+    );
+
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const resultObj = this.mssql.parseMultiResultSet(resultSet);
+      return resultObj ? (resultObj as ClientProviderMessage[]) : [];
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
+
+  // Gets messages based on the subject id.
   async getSubjectMessages(
     subjectId: number,
     chunkCount: number,
