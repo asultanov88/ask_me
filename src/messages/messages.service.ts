@@ -55,8 +55,14 @@ export class MessagesService {
         parameterValue: this.mssql.convertToString(chunkNum)
       },
       {
-        inputParamName: 'ClientId',
+        inputParamName: 'UserId',
+        parameterValue: this.request['user'].userId
+      },
+      {
+        inputParamName: 'IsClient',
         parameterValue: this.request['user'].clientId
+          ? this.mssql.convertToString(true)
+          : this.mssql.convertToString(false)
       }
     ];
 

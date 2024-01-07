@@ -179,6 +179,11 @@ export class MsSql {
       input.toLowerCase().trim() !== 'false'
     ) {
       escapedResult = `'${input ? input : ''}'`;
+    } else if (
+      input.toLowerCase().trim() === 'true' ||
+      input.toLowerCase().trim() === 'false'
+    ) {
+      escapedResult = input?.toLowerCase()?.trim();
     } else {
       escapedResult = 'NULL';
     }
