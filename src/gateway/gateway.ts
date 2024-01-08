@@ -7,7 +7,7 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { SocketMessageDto } from './dto';
+import { SocketMessageDto, ViewedMessage } from './dto';
 import { GatewayService } from './gateway.service';
 import { Socket } from 'socket.io';
 
@@ -20,8 +20,6 @@ export class Gateway implements OnModuleInit {
   onModuleInit() {
     this.server.on('connection', (socket) => {
       this.gatewayService.connectedClients.set(socket.id, socket);
-      console.log(socket.id);
-      console.log('connected');
     });
   }
 
@@ -35,8 +33,16 @@ export class Gateway implements OnModuleInit {
   }
 
   @UseGuards(AuthGuard)
+  @SubscribeMessage('viewedMessage')
+  async onViewedMessage(@MessageBody() body: ViewedMessage) {
+    this.gatewayService.updateMessageAsViewed(body);
+  }
+
+  @UseGuards(AuthGuard)
   @SubscribeMessage('incomingMessage')
-  onIncomingMessage(@MessageBody() body: SocketMessageDto) {
+  async onIncomingMessage(@MessageBody() body: SocketMessageDto) {
+    const postedMessage = await this.gatewayService.postNewMessage(body);
+
     const receiverUserId: number = parseInt(body.toUserId?.toString(), 10);
     const receiverSocketId: string =
       this.gatewayService.userSocketClinet.get(receiverUserId);
@@ -44,7 +50,7 @@ export class Gateway implements OnModuleInit {
       this.gatewayService.connectedClients.get(receiverSocketId);
 
     if (receiverSocket) {
-      receiverSocket.emit('outgoingMessage', body.message);
+      receiverSocket.emit('outgoingMessage', postedMessage);
     }
   }
 

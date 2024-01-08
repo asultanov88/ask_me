@@ -7,3 +7,14 @@ export interface SocketMessageDto {
   accessToken: string;
   user: AuthorisedUser;
 }
+
+export interface PostedMessage {
+  messageId: number;
+  message: string;
+  error: string;
+}
+
+export interface ViewedMessage {
+  accessToken: string;
+  messageId: number;
+}
