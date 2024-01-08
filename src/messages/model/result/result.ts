@@ -8,5 +8,6 @@ export interface Message {
   messageId: number;
   message: string;
   createdBy: number;
+  createdAt: string;
   viewed: boolean;
 }

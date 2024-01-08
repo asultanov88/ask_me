@@ -90,6 +90,11 @@ export interface ClientProvider {
 }
 
 export interface ProviderDetailsResult {
+  providerId: number;
+  providerUserId: number;
+  firstName: string;
+  lastName: string;
+  email: string;
   companyName: string;
   address: string;
   phoneNumber: string;

@@ -163,12 +163,9 @@ export class ProvidersService {
         await this.database.query(dbQueryProviderCategories)
       );
 
-      if (providerWeekDays?.length > 0) {
-        providerDetails.availableDays = providerWeekDays as LkWeekDay[];
-      }
-      if (providerCategories?.length > 0) {
-        providerDetails.category = providerCategories as LkProviderCategory[];
-      }
+      providerDetails.availableDays = providerWeekDays as LkWeekDay[];
+
+      providerDetails.category = providerCategories as LkProviderCategory[];
 
       return providerDetails ? (providerDetails as ProviderDetailsResult) : {};
     } catch (error) {
