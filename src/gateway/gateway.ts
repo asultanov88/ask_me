@@ -17,8 +17,20 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   constructor(private readonly gatewayService: GatewayService) {}
 
   handleDisconnect(client: any) {
-    // this.gatewayService.connectedClients.delete(client.id);
-    // this.gatewayService.userSocketClinet.f
+    // Delete client's socket instance.
+    this.gatewayService.connectedClients.delete(client.id);
+
+    // Delete client user id and socket id map entry.
+    let disconnectUserId: number = null;
+    for (let [key, value] of this.gatewayService.userSocketClinet.entries()) {
+      if (value === client.id) {
+        disconnectUserId = key;
+        break;
+      }
+    }
+    if (disconnectUserId) {
+      this.gatewayService.userSocketClinet.delete(disconnectUserId);
+    }
   }
 
   @WebSocketServer()
@@ -46,8 +58,8 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   }
 
   @UseGuards(AuthGuard)
-  @SubscribeMessage('incomingMessage')
-  async onIncomingMessage(@MessageBody() body: SocketMessageDto) {
+  @SubscribeMessage('outgoingMessage')
+  async onOutgoingMessage(@MessageBody() body: SocketMessageDto) {
     const postedMessage = await this.gatewayService.postNewMessage(body);
 
     // Emit message to the receiver.
@@ -58,7 +70,7 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
       this.gatewayService.connectedClients.get(receiverSocketId);
 
     if (receiverSocket) {
-      receiverSocket.emit('outgoingMessage', postedMessage);
+      receiverSocket.emit('incomingMessage', postedMessage);
     }
 
     // Emit message back to the sender.
@@ -69,7 +81,7 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
       this.gatewayService.connectedClients.get(senderSocketId);
 
     if (senderSocket) {
-      receiverSocket.emit('outgoingMessage', postedMessage);
+      senderSocket.emit('incomingMessage', postedMessage);
     }
   }
 
