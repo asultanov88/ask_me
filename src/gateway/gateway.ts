@@ -1,6 +1,7 @@
 import { OnModuleInit, UseGuards } from '@nestjs/common';
 import {
   MessageBody,
+  OnGatewayDisconnect,
   SubscribeMessage,
   WebSocketGateway,
   WebSocketServer
@@ -12,8 +13,14 @@ import { GatewayService } from './gateway.service';
 import { Socket } from 'socket.io';
 
 @WebSocketGateway()
-export class Gateway implements OnModuleInit {
+export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   constructor(private readonly gatewayService: GatewayService) {}
+
+  handleDisconnect(client: any) {
+    // this.gatewayService.connectedClients.delete(client.id);
+    // this.gatewayService.userSocketClinet.f
+  }
+
   @WebSocketServer()
   server: Server;
 
@@ -43,6 +50,7 @@ export class Gateway implements OnModuleInit {
   async onIncomingMessage(@MessageBody() body: SocketMessageDto) {
     const postedMessage = await this.gatewayService.postNewMessage(body);
 
+    // Emit message to the receiver.
     const receiverUserId: number = parseInt(body.toUserId?.toString(), 10);
     const receiverSocketId: string =
       this.gatewayService.userSocketClinet.get(receiverUserId);
@@ -50,6 +58,17 @@ export class Gateway implements OnModuleInit {
       this.gatewayService.connectedClients.get(receiverSocketId);
 
     if (receiverSocket) {
+      receiverSocket.emit('outgoingMessage', postedMessage);
+    }
+
+    // Emit message back to the sender.
+    const senderUserId: number = body.user.userId;
+    const senderSocketId: string =
+      this.gatewayService.userSocketClinet.get(senderUserId);
+    const senderSocket: Socket =
+      this.gatewayService.connectedClients.get(senderSocketId);
+
+    if (senderSocket) {
       receiverSocket.emit('outgoingMessage', postedMessage);
     }
   }
