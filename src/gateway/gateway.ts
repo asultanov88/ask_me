@@ -73,7 +73,7 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
     );
 
     if (providerSocket) {
-      clientSocket.emit('viewConfirmation', {
+      providerSocket.emit('viewConfirmation', {
         messageId: messageViewed.messageId
       });
     }
