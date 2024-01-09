@@ -13,7 +13,7 @@ import { GatewayService } from './gateway.service';
 import { Socket } from 'socket.io';
 import { MessageViewed } from 'src/messages/model/result/result';
 
-@WebSocketGateway(8091, {
+@WebSocketGateway({
   cors: {
     origin: '*',
     methods: ['GET', 'POST'],
