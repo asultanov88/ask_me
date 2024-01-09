@@ -13,9 +13,19 @@ import { GatewayService } from './gateway.service';
 import { Socket } from 'socket.io';
 import { MessageViewed } from 'src/messages/model/result/result';
 
-@WebSocketGateway()
+@WebSocketGateway(8091, {
+  cors: {
+    origin: '*',
+    methods: ['GET', 'POST'],
+    transports: ['websocket', 'polling'],
+    credentials: false
+  },
+  allowEIO3: true
+})
 export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   constructor(private readonly gatewayService: GatewayService) {}
+  @WebSocketServer()
+  server: Server;
 
   handleDisconnect(client: any) {
     // Delete client's socket instance.
@@ -33,9 +43,6 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
       this.gatewayService.userSocketClinet.delete(disconnectUserId);
     }
   }
-
-  @WebSocketServer()
-  server: Server;
 
   onModuleInit() {
     this.server.on('connection', (socket) => {
