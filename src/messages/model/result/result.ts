@@ -11,3 +11,9 @@ export interface Message {
   createdAt: string;
   viewed: boolean;
 }
+
+export interface MessageViewed {
+  messageId: number;
+  clientUserId: number;
+  providerUserId: number;
+}

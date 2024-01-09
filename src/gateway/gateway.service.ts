@@ -9,6 +9,7 @@ import { PostedMessage, SocketMessageDto, ViewedMessage } from './dto';
 import { MessageDto } from 'src/messages/model/dto/dto';
 import { TableTypes } from 'src/database/table-types/table-types';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
+import { MessageViewed } from 'src/messages/model/result/result';
 
 @Injectable()
 export class GatewayService {
@@ -25,7 +26,7 @@ export class GatewayService {
   public readonly userSocketClinet: Map<number, string> = new Map();
 
   // Marks message as viewed.
-  async updateMessageAsViewed(message: ViewedMessage): Promise<void> {
+  async updateMessageAsViewed(message: ViewedMessage): Promise<MessageViewed> {
     const databaseParams: DatabaseParam[] = [
       {
         inputParamName: 'MessageId',
@@ -39,7 +40,9 @@ export class GatewayService {
     );
 
     try {
-      await this.database.query(dbQuery);
+      const resultSet = await this.database.query(dbQuery);
+      const resultObj = this.mssql.parseSingleResultSet(resultSet);
+      return resultObj as MessageViewed;
     } catch (error) {
       this.errorHandler.throwDatabaseError(error);
     }
@@ -91,5 +94,11 @@ export class GatewayService {
       };
       return postedMessage;
     }
+  }
+
+  public getSocketByUserId(userId: number): Socket {
+    const socketId: string = this.userSocketClinet.get(userId);
+    const socket: Socket = this.connectedClients.get(socketId);
+    return socket;
   }
 }

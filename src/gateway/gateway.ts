@@ -11,6 +11,7 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import { SocketMessageDto, ViewedMessage } from './dto';
 import { GatewayService } from './gateway.service';
 import { Socket } from 'socket.io';
+import { MessageViewed } from 'src/messages/model/result/result';
 
 @WebSocketGateway()
 export class Gateway implements OnModuleInit, OnGatewayDisconnect {
@@ -54,7 +55,28 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   @UseGuards(AuthGuard)
   @SubscribeMessage('viewedMessage')
   async onViewedMessage(@MessageBody() body: ViewedMessage) {
-    this.gatewayService.updateMessageAsViewed(body);
+    const messageViewed: MessageViewed =
+      await this.gatewayService.updateMessageAsViewed(body);
+
+    const clientSocket: Socket = this.gatewayService.getSocketByUserId(
+      messageViewed.clientUserId
+    );
+
+    if (clientSocket) {
+      clientSocket.emit('viewConfirmation', {
+        messageId: messageViewed.messageId
+      });
+    }
+
+    const providerSocket: Socket = this.gatewayService.getSocketByUserId(
+      messageViewed.providerUserId
+    );
+
+    if (providerSocket) {
+      clientSocket.emit('viewConfirmation', {
+        messageId: messageViewed.messageId
+      });
+    }
   }
 
   @UseGuards(AuthGuard)
@@ -64,22 +86,16 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
 
     // Emit message to the receiver.
     const receiverUserId: number = parseInt(body.toUserId?.toString(), 10);
-    const receiverSocketId: string =
-      this.gatewayService.userSocketClinet.get(receiverUserId);
     const receiverSocket: Socket =
-      this.gatewayService.connectedClients.get(receiverSocketId);
-
+      this.gatewayService.getSocketByUserId(receiverUserId);
     if (receiverSocket) {
       receiverSocket.emit('incomingMessage', postedMessage);
     }
 
     // Emit message back to the sender.
     const senderUserId: number = body.user.userId;
-    const senderSocketId: string =
-      this.gatewayService.userSocketClinet.get(senderUserId);
     const senderSocket: Socket =
-      this.gatewayService.connectedClients.get(senderSocketId);
-
+      this.gatewayService.getSocketByUserId(senderUserId);
     if (senderSocket) {
       senderSocket.emit('incomingMessage', postedMessage);
     }
