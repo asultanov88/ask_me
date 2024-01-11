@@ -25,7 +25,7 @@ export class MessagesController {
     return await this.messageService.postNewMessage(newMessage);
   }
 
-  @Get('clinet-provider-subjects')
+  @Get('client-provider-subjects')
   async getClientProviderSubjects(@Query() query): Promise<any> {
     return await this.messageService.getClientProviderSubjects(
       query.providerId

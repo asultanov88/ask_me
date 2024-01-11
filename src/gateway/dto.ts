@@ -1,4 +1,5 @@
 import { AuthorisedUser } from 'src/auth/models/dto';
+import { Message } from 'src/messages/model/result/result';
 
 export interface SocketMessageDto {
   subjectId: number;
@@ -8,9 +9,7 @@ export interface SocketMessageDto {
   user: AuthorisedUser;
 }
 
-export interface PostedMessage {
-  messageId: number;
-  message: string;
+export interface PostedMessage extends Message {
   error: string;
 }
 

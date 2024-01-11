@@ -104,7 +104,7 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
     const senderSocket: Socket =
       this.gatewayService.getSocketByUserId(senderUserId);
     if (senderSocket) {
-      senderSocket.emit('incomingMessage', postedMessage);
+      senderSocket.emit('returnMessage', postedMessage);
     }
   }
 

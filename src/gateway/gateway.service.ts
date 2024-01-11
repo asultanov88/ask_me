@@ -82,16 +82,23 @@ export class GatewayService {
       const resultObj = this.mssql.parseSingleResultSet(resultSet);
       postedMessage = {
         messageId: resultObj.messageId,
-        message: newMessage.message,
+        message: resultObj.message,
+        createdBy: resultObj.createdBy,
+        createdAt: resultObj.createdAt,
+        viewed: resultObj.viewed,
         error: null
       };
       return postedMessage;
     } catch (error) {
       postedMessage = {
+        error: 'Unable to save the message',
         messageId: null,
         message: newMessage.message,
-        error: 'Unable to save the message'
+        createdBy: null,
+        createdAt: null,
+        viewed: false
       };
+
       return postedMessage;
     }
   }
