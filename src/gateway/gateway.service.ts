@@ -81,6 +81,7 @@ export class GatewayService {
       const resultSet = await this.database.query(dbQuery);
       const resultObj = this.mssql.parseSingleResultSet(resultSet);
       postedMessage = {
+        subjectId: newMessage.subjectId,
         messageId: resultObj.messageId,
         message: resultObj.message,
         createdBy: resultObj.createdBy,
@@ -91,6 +92,7 @@ export class GatewayService {
       return postedMessage;
     } catch (error) {
       postedMessage = {
+        subjectId: null,
         error: 'Unable to save the message',
         messageId: null,
         message: newMessage.message,

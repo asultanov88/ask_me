@@ -10,6 +10,7 @@ export interface SocketMessageDto {
 }
 
 export interface PostedMessage extends Message {
+  subjectId: number;
   error: string;
 }
 
