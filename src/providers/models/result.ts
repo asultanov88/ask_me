@@ -86,7 +86,7 @@ export interface ClientProvider {
   address: string;
   phoneNumber: string;
   description: string;
-  newMessage: boolean;
+  newMessageCount: number;
 }
 
 export interface ProviderDetailsResult {
