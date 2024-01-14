@@ -72,7 +72,7 @@ export interface ProviderClient {
   firstName: string;
   lastName: string;
   email: string;
-  newMessage: boolean;
+  newMessageCount: number;
 }
 
 export interface ClientProvider {
