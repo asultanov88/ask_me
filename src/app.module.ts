@@ -16,6 +16,7 @@ import { UsersModule } from './users/users.module';
 import { AuthMiddleware } from './middleware/auth.middleware';
 import { APP_PIPE } from '@nestjs/core';
 import { MessagesModule } from './messages/messages.module';
+import { AttachmentsModule } from './attachments/attachments.module';
 
 @Module({
   imports: [
@@ -34,7 +35,8 @@ import { MessagesModule } from './messages/messages.module';
     ProvidersModule,
     AuthModule,
     UsersModule,
-    MessagesModule
+    MessagesModule,
+    AttachmentsModule
   ],
   controllers: [AppController],
   providers: [

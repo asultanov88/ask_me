@@ -4,9 +4,11 @@ import { Message } from 'src/messages/model/result/result';
 export interface SocketMessageDto {
   subjectId: number;
   message: string;
+  isAttachment: boolean;
   toUserId: number;
   accessToken: string;
   user: AuthorisedUser;
+  attachments: Express.Multer.File[];
 }
 
 export interface PostedMessage extends Message {

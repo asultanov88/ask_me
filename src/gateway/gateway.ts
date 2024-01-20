@@ -89,22 +89,14 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   @UseGuards(AuthGuard)
   @SubscribeMessage('outgoingMessage')
   async onOutgoingMessage(@MessageBody() body: SocketMessageDto) {
-    const postedMessage = await this.gatewayService.postNewMessage(body);
-
-    // Emit message to the receiver.
-    const receiverUserId: number = parseInt(body.toUserId?.toString(), 10);
-    const receiverSocket: Socket =
-      this.gatewayService.getSocketByUserId(receiverUserId);
-    if (receiverSocket) {
-      receiverSocket.emit('incomingMessage', postedMessage);
-    }
-
-    // Emit message back to the sender.
-    const senderUserId: number = body.user.userId;
-    const senderSocket: Socket =
-      this.gatewayService.getSocketByUserId(senderUserId);
-    if (senderSocket) {
-      senderSocket.emit('returnMessage', postedMessage);
+    let postedMessage = null;
+    if (!body.isAttachment) {
+      postedMessage = await this.gatewayService.postNewMessage(body);
+      // Emit message to the receiver.
+      this.gatewayService.emitMessageToReceiver(body.toUserId, postedMessage);
+      // Emit message back to the sender.
+      this.gatewayService.emitMessageToSender(body.user.userId, postedMessage);
+    } else {
     }
   }
 

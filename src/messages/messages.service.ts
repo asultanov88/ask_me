@@ -151,6 +151,7 @@ export class MessagesService {
     const messageDto: MessageDto = {
       messageId: null,
       message: newMessage.message,
+      isAttachment: newMessage.isAttachment ?? false,
       createdBy: this.request['user'].userId,
       createdAt: null,
       viewed: false

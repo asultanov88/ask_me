@@ -14,6 +14,8 @@ export class MessageDto {
   @IsString()
   message: string;
 
+  isAttachment: boolean;
+
   createdBy: number;
 
   createdAt: string;
@@ -30,6 +32,8 @@ export class NewMessage {
   @IsNotEmpty()
   @IsString()
   message: string;
+
+  isAttachment: boolean;
 }
 
 export class SubjectDto {

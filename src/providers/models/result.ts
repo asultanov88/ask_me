@@ -76,7 +76,6 @@ export interface ProviderClient {
 }
 
 export interface ClientProvider {
-  clientProviderId;
   providerId: number;
   providerUserId: number;
   firstName: string;

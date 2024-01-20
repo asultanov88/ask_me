@@ -61,7 +61,14 @@ export class TableTypes {
 
   public static MessageTableType: TableType = {
     typeName: 'MessageTableType',
-    fields: ['messageId', 'message', 'createdBy', 'createdAt', 'viewed'],
+    fields: [
+      'messageId',
+      'message',
+      'isAttachment',
+      'createdBy',
+      'createdAt',
+      'viewed'
+    ],
     dto: new MessageDto()
   };
 }

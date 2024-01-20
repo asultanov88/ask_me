@@ -7,6 +7,7 @@ export interface ClientProviderMessage {
 export interface Message {
   messageId: number;
   message: string;
+  isAttachment: boolean;
   createdBy: number;
   createdAt: string;
   viewed: boolean;

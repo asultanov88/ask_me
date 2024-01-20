@@ -53,6 +53,7 @@ export class GatewayService {
     const messageDto: MessageDto = {
       messageId: null,
       message: newMessage.message,
+      isAttachment: newMessage.isAttachment ?? false,
       createdBy: newMessage.user.userId,
       createdAt: null,
       viewed: false
@@ -84,6 +85,7 @@ export class GatewayService {
         subjectId: newMessage.subjectId,
         messageId: resultObj.messageId,
         message: resultObj.message,
+        isAttachment: resultObj.isAttachment,
         createdBy: resultObj.createdBy,
         createdAt: resultObj.createdAt,
         viewed: resultObj.viewed,
@@ -96,6 +98,7 @@ export class GatewayService {
         error: 'Unable to save the message',
         messageId: null,
         message: newMessage.message,
+        isAttachment: false,
         createdBy: null,
         createdAt: null,
         viewed: false
@@ -109,5 +112,28 @@ export class GatewayService {
     const socketId: string = this.userSocketClinet.get(userId);
     const socket: Socket = this.connectedClients.get(socketId);
     return socket;
+  }
+
+  // Emits message to receiver.
+  public emitMessageToReceiver(
+    toUserId: number,
+    postedMessage: PostedMessage
+  ): void {
+    const receiverUserId: number = parseInt(toUserId.toString(), 10);
+    const receiverSocket: Socket = this.getSocketByUserId(receiverUserId);
+    if (receiverSocket) {
+      receiverSocket.emit('incomingMessage', postedMessage);
+    }
+  }
+
+  //Emits message back to the sender.
+  public emitMessageToSender(
+    senderUserId: number,
+    postedMessage: PostedMessage
+  ): void {
+    const senderSocket: Socket = this.getSocketByUserId(senderUserId);
+    if (senderSocket) {
+      senderSocket.emit('returnMessage', postedMessage);
+    }
   }
 }
