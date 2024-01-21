@@ -4,7 +4,11 @@ import {
   ProviderDetailsDto,
   ProviderWorkHourDto
 } from 'src/providers/models/dto';
-import { MessageDto, SubjectDto } from 'src/messages/model/dto/dto';
+import {
+  MessageAttachmentDto,
+  MessageDto,
+  SubjectDto
+} from 'src/messages/model/dto/dto';
 
 export class TableTypes {
   public static UserTableType: TableType = {
@@ -70,6 +74,20 @@ export class TableTypes {
       'viewed'
     ],
     dto: new MessageDto()
+  };
+
+  public static MessageAttachmentTableType: TableType = {
+    typeName: 'MessageAttachmentTableType',
+    fields: [
+      'messageAttachmentId',
+      'messageId',
+      'originalName',
+      'uuid',
+      's3Key',
+      's3Bucket',
+      'location'
+    ],
+    dto: new MessageAttachmentDto()
   };
 }
 

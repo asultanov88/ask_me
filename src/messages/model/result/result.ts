@@ -4,6 +4,10 @@ export interface ClientProviderMessage {
   newMessageCount: number;
 }
 
+export interface Attachment {
+  messageAttachmentId: number;
+}
+
 export interface Message {
   messageId: number;
   message: string;
@@ -11,6 +15,7 @@ export interface Message {
   createdBy: number;
   createdAt: string;
   viewed: boolean;
+  attachments: Attachment[];
 }
 
 export interface MessageViewed {

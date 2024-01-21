@@ -89,7 +89,8 @@ export class GatewayService {
         createdBy: resultObj.createdBy,
         createdAt: resultObj.createdAt,
         viewed: resultObj.viewed,
-        error: null
+        error: null,
+        attachments: []
       };
       return postedMessage;
     } catch (error) {
@@ -101,7 +102,8 @@ export class GatewayService {
         isAttachment: false,
         createdBy: null,
         createdAt: null,
-        viewed: false
+        viewed: false,
+        attachments: []
       };
 
       return postedMessage;

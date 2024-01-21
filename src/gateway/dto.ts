@@ -8,7 +8,6 @@ export interface SocketMessageDto {
   toUserId: number;
   accessToken: string;
   user: AuthorisedUser;
-  attachments: Express.Multer.File[];
 }
 
 export interface PostedMessage extends Message {
