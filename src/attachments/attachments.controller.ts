@@ -2,13 +2,11 @@ import {
   Body,
   Controller,
   Post,
-  UploadedFile,
-  UploadedFiles,
   UploadedFiles,
   UseInterceptors
 } from '@nestjs/common';
+import { FilesInterceptor } from '@nestjs/platform-express';
 import { AttachmentsService } from './attachments.service';
-import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('attachments')
 export class AttachmentsController {
