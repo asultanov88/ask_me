@@ -99,7 +99,7 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
     @UploadedFiles() files,
     @MessageBody() body
   ) {
-    const message = body.message as SocketMessageDto;
+    const message = JSON.parse(body.message) as SocketMessageDto;
     console.log(files);
     console.log(message);
   }
