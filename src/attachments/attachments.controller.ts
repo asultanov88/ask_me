@@ -4,6 +4,7 @@ import {
   Post,
   UploadedFile,
   UploadedFiles,
+  UploadedFiles,
   UseInterceptors
 } from '@nestjs/common';
 import { AttachmentsService } from './attachments.service';
