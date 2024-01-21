@@ -1,4 +1,9 @@
-import { OnModuleInit, UseGuards } from '@nestjs/common';
+import {
+  OnModuleInit,
+  UploadedFiles,
+  UseGuards,
+  UseInterceptors
+} from '@nestjs/common';
 import {
   MessageBody,
   OnGatewayDisconnect,
@@ -12,6 +17,7 @@ import { SocketMessageDto, ViewedMessage } from './dto';
 import { GatewayService } from './gateway.service';
 import { Socket } from 'socket.io';
 import { MessageViewed } from 'src/messages/model/result/result';
+import { FilesInterceptor } from '@nestjs/platform-express';
 
 @WebSocketGateway({
   cors: {
@@ -84,6 +90,18 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
         messageId: messageViewed.messageId
       });
     }
+  }
+
+  @UseGuards(AuthGuard)
+  @SubscribeMessage('outgoingMessageWithAttachment')
+  @UseInterceptors(FilesInterceptor('files', 100))
+  async onOutgoingMessageWithAttachment(
+    @UploadedFiles() files,
+    @MessageBody() body
+  ) {
+    const message = body.message as SocketMessageDto;
+    console.log(files);
+    console.log(message);
   }
 
   @UseGuards(AuthGuard)
