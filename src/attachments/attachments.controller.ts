@@ -13,7 +13,7 @@ export class AttachmentsController {
 
   @Post('upload')
   @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@UploadedFile() file: Express.Multer.File) {
+  uploadFile(@UploadedFile() file: Express.Multer.File[]) {
     return this.attachmentsService.uploadFile(file);
   }
 }

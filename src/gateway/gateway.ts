@@ -97,6 +97,7 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
       // Emit message back to the sender.
       this.gatewayService.emitMessageToSender(body.user.userId, postedMessage);
     } else {
+      // TODO: Handle attachment upload here.
     }
   }
 

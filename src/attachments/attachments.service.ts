@@ -25,12 +25,12 @@ export class AttachmentsService {
     s3ForcePathStyle: true
   });
 
-  async uploadFile(file: Express.Multer.File): Promise<any> {
+  async uploadFile(file: Express.Multer.File[]): Promise<any> {
     const newUuid = uuid();
     const params: S3.PutObjectRequest = {
       Bucket: process.env.AWS_S3_BUCKET_NAME,
       Key: `${process.env.AWS_S3_FOLDER_NAME}/${newUuid}`,
-      Body: file.buffer
+      Body: file[0].buffer
     };
 
     const uploadResult = await this.s3.upload(params).promise();
