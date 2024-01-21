@@ -19,7 +19,7 @@ export class AttachmentsController {
     @UploadedFiles() files,
     @Body() body
   ): Promise<any> {
-    const message = body.message as AttachmentMessageDto;
+    const message = JSON.parse(body.message) as AttachmentMessageDto;
     console.log(message);
     return await this.attachmentsService.uploadFile(files);
   }

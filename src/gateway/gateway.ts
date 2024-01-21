@@ -93,18 +93,6 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   }
 
   @UseGuards(AuthGuard)
-  @SubscribeMessage('outgoingMessageWithAttachment')
-  @UseInterceptors(FilesInterceptor('files', 100))
-  async onOutgoingMessageWithAttachment(
-    @UploadedFiles() files,
-    @MessageBody() body
-  ) {
-    const message = JSON.parse(body.message) as SocketMessageDto;
-    console.log(files);
-    console.log(message);
-  }
-
-  @UseGuards(AuthGuard)
   @SubscribeMessage('outgoingMessage')
   async onOutgoingMessage(@MessageBody() body: SocketMessageDto) {
     let postedMessage = null;
