@@ -7,6 +7,7 @@ import {
 } from '@nestjs/common';
 import { FilesInterceptor } from '@nestjs/platform-express';
 import { AttachmentsService } from './attachments.service';
+import { AttachmentMessageDto } from './model/dto';
 
 @Controller('attachments')
 export class AttachmentsController {
@@ -18,8 +19,8 @@ export class AttachmentsController {
     @UploadedFiles() files,
     @Body() body
   ): Promise<any> {
-    console.log(body);
-
+    const message = body.message as AttachmentMessageDto;
+    console.log(message);
     return await this.attachmentsService.uploadFile(files);
   }
 }
