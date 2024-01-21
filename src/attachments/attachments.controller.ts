@@ -2,18 +2,19 @@ import {
   Controller,
   Post,
   UploadedFile,
+  UploadedFiles,
   UseInterceptors
 } from '@nestjs/common';
 import { AttachmentsService } from './attachments.service';
-import { FileInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 
 @Controller('attachments')
 export class AttachmentsController {
   public constructor(private readonly attachmentsService: AttachmentsService) {}
 
   @Post('upload')
-  @UseInterceptors(FileInterceptor('file'))
-  uploadFile(@UploadedFile() file: Express.Multer.File[]) {
-    return this.attachmentsService.uploadFile(file);
+  @UseInterceptors(FilesInterceptor('files', 100))
+  async uploadMultipleFiles(@UploadedFiles() files): Promise<any> {
+    return await this.attachmentsService.uploadFile(files);
   }
 }
