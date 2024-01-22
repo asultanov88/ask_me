@@ -6,6 +6,7 @@ export interface ClientProviderMessage {
 
 export interface Attachment {
   messageAttachmentId: number;
+  attachmentThumbnailId: number;
 }
 
 export interface Message {

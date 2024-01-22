@@ -4,11 +4,11 @@ import {
   ProviderDetailsDto,
   ProviderWorkHourDto
 } from 'src/providers/models/dto';
+import { MessageDto, SubjectDto } from 'src/messages/model/dto/dto';
 import {
-  MessageAttachmentDto,
-  MessageDto,
-  SubjectDto
-} from 'src/messages/model/dto/dto';
+  AttachmentThumbnailDto,
+  MessageAttachmentDto
+} from 'src/attachments/model/dto';
 
 export class TableTypes {
   public static UserTableType: TableType = {
@@ -88,6 +88,20 @@ export class TableTypes {
       'location'
     ],
     dto: new MessageAttachmentDto()
+  };
+
+  public static AttachmentThumbnailTableType: TableType = {
+    typeName: 'AttachmentThumbnailTableType',
+    fields: [
+      'attachmentThumbnailId',
+      'messageAttachmentId',
+      'mimeType',
+      'uuid',
+      's3Key',
+      's3Bucket',
+      'location'
+    ],
+    dto: new AttachmentThumbnailDto()
   };
 }
 

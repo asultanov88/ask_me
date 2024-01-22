@@ -7,13 +7,21 @@ import { DatabaseEntity } from 'src/database/entities/database';
 import { MsSql } from 'src/database/typeorm/mssql';
 import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
-import { MessageAttachmentDto, MessageDto } from 'src/messages/model/dto/dto';
+import { MessageDto } from 'src/messages/model/dto/dto';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { TableTypes } from 'src/database/table-types/table-types';
 import { PostedMessage } from 'src/gateway/dto';
 import { GatewayService } from 'src/gateway/gateway.service';
-import { AttachmentMessageDto } from './model/dto';
-import { MessageAttachmentResult } from './model/result';
+import {
+  AttachmentMessageDto,
+  AttachmentThumbnailDto,
+  MessageAttachmentDto
+} from './model/dto';
+import {
+  AttachmentThumbnailResult,
+  MessageAttachmentResult
+} from './model/result';
+import * as sharp from 'sharp';
 
 @Injectable()
 export class AttachmentsService {
@@ -91,26 +99,63 @@ export class AttachmentsService {
         promiseArray.push(
           new Promise<void>(function (resolve, reject) {
             const newUuid = uuid();
-            const uploadResult = that
-              .uploadFileToCloud(file, newUuid)
-              .then((uploadResult) => {
-                // Save as attachment in db.
-                that
-                  .saveAttachmentDetails(
-                    messageId,
-                    file,
-                    newUuid,
-                    uploadResult.Key,
-                    uploadResult.Bucket,
-                    uploadResult.Location
-                  )
-                  .then((attachment) => {
+            that.uploadFileToCloud(file, newUuid).then((uploadedAttachment) => {
+              // Save as attachment in db.
+              that
+                .saveAttachmentDetails(
+                  messageId,
+                  file,
+                  newUuid,
+                  uploadedAttachment.Key,
+                  uploadedAttachment.Bucket,
+                  uploadedAttachment.Location
+                )
+                .then(async (attachment) => {
+                  // Create a thumbnail of the attachment.
+                  const fileMimeType = file?.mimetype?.toLowerCase();
+                  if (
+                    fileMimeType.includes('jpeg') ||
+                    fileMimeType.includes('jpg') ||
+                    fileMimeType.includes('png') ||
+                    fileMimeType.includes('gif') ||
+                    fileMimeType.includes('tiff')
+                  ) {
+                    const thumbnailUuid = uuid();
+                    const thumbnailBuffer = await sharp(file.buffer)
+                      .resize(200, 200)
+                      .toBuffer();
+                    that
+                      .uploadThumbnailToCloud(thumbnailBuffer, thumbnailUuid)
+                      .then((uploadedThumbnail) => {
+                        that
+                          .saveThumbnailDetails(
+                            attachment.messageAttachmentId,
+                            file.mimetype,
+                            thumbnailUuid,
+                            uploadedThumbnail.Key,
+                            uploadedThumbnail.Bucket,
+                            uploadedThumbnail.Location
+                          )
+                          .then((savedThumbnail) => {
+                            postedMessage.attachments.push({
+                              messageAttachmentId:
+                                attachment.messageAttachmentId,
+                              attachmentThumbnailId:
+                                savedThumbnail.attachmentThumbnailId
+                            });
+                            resolve();
+                          });
+                      });
+                  } else {
+                    // Thumbnail cannot be made, save it as it is.
                     postedMessage.attachments.push({
-                      messageAttachmentId: attachment.messageAttachmentId
+                      messageAttachmentId: attachment.messageAttachmentId,
+                      attachmentThumbnailId: null
                     });
                     resolve();
-                  });
-              });
+                  }
+                });
+            });
           })
         );
       });
@@ -133,6 +178,60 @@ export class AttachmentsService {
     };
     const uploadResult = await this.s3.upload(params).promise();
     return uploadResult;
+  }
+
+  // Uploads thumbnail to S3 cloud bucket.
+  private async uploadThumbnailToCloud(
+    buffer: Buffer,
+    uuid: string
+  ): Promise<any> {
+    const params: S3.PutObjectRequest = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: `${process.env.AWS_S3_THUMBNAIL_FOLDER}/${uuid}`,
+      Body: buffer
+    };
+    const uploadResult = await this.s3.upload(params).promise();
+    return uploadResult;
+  }
+
+  // Saves thumbnail details in DB.
+  private async saveThumbnailDetails(
+    messageAttachmentId: number,
+    mimeType: string,
+    uuid: string,
+    s3Key: string,
+    s3Bucket: string,
+    location: string
+  ): Promise<AttachmentThumbnailResult> {
+    const attachmentThumbnailDto: AttachmentThumbnailDto = {
+      attachmentThumbnailId: null,
+      messageAttachmentId: messageAttachmentId,
+      mimeType: mimeType,
+      uuid: uuid,
+      s3Key: s3Key,
+      s3Bucket: s3Bucket,
+      location: location
+    };
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        tableType: TableTypes.AttachmentThumbnailTableType,
+        inputParamName: 'AttachmentThumbnail',
+        bulkParamValue: [attachmentThumbnailDto]
+      }
+    ];
+
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UpsInsertAttachmentThumbnail'
+    );
+
+    const resultSet = await this.database.query(dbQuery);
+    const resultObj = this.mssql.parseSingleResultSet(
+      resultSet
+    ) as AttachmentThumbnailResult;
+
+    return resultObj;
   }
 
   // Saves attachment details in DB.
