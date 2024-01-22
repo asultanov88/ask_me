@@ -13,7 +13,11 @@ import {
 } from '@nestjs/websockets';
 import { Server } from 'socket.io';
 import { AuthGuard } from 'src/auth/auth.guard';
-import { SocketMessageDto, ViewedMessage } from './dto';
+import {
+  OutgoingAttachmentMessageDto,
+  SocketMessageDto,
+  ViewedMessage
+} from './dto';
 import { GatewayService } from './gateway.service';
 import { Socket } from 'socket.io';
 import { MessageViewed } from 'src/messages/model/result/result';
@@ -95,13 +99,24 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   @UseGuards(AuthGuard)
   @SubscribeMessage('outgoingMessage')
   async onOutgoingMessage(@MessageBody() body: SocketMessageDto) {
-    let postedMessage = null;
     if (!body.isAttachment) {
-      postedMessage = await this.gatewayService.postNewMessage(body);
+      let postedMessage = await this.gatewayService.postNewMessage(body);
       // Emit message to the receiver.
       this.gatewayService.emitMessageToReceiver(body.toUserId, postedMessage);
       // Emit message back to the sender.
       this.gatewayService.emitMessageToSender(body.user.userId, postedMessage);
+    }
+  }
+
+  @UseGuards(AuthGuard)
+  @SubscribeMessage('outgoingAttachment')
+  async onOutgoingAttachment(
+    @MessageBody() body: OutgoingAttachmentMessageDto
+  ) {
+    if (body.message.isAttachment) {
+      let postedMessage = body.message;
+      // Emit message to the receiver.
+      this.gatewayService.emitMessageToReceiver(body.toUserId, postedMessage);
     }
   }
 

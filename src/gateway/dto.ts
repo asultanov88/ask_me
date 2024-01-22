@@ -10,6 +10,11 @@ export interface SocketMessageDto {
   user: AuthorisedUser;
 }
 
+export interface OutgoingAttachmentMessageDto {
+  toUserId: number;
+  message: PostedMessage;
+}
+
 export interface PostedMessage extends Message {
   subjectId: number;
   error: string;
