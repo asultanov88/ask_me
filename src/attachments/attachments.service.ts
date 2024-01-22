@@ -37,15 +37,15 @@ export class AttachmentsService {
     files: Express.Multer.File[],
     message: AttachmentMessageDto
   ): Promise<any> {
-    let postedMessage: PostedMessage = null;
-
-    try {
+    var that = this;
+    return new Promise<PostedMessage>(async function (resolve, reject) {
+      let postedMessage: PostedMessage = null;
       // Insert the message first.
       const messageDto: MessageDto = {
         messageId: null,
         message: message.message,
         isAttachment: true,
-        createdBy: this.request['user'].userId,
+        createdBy: that.request['user'].userId,
         createdAt: null,
         viewed: false
       };
@@ -53,7 +53,7 @@ export class AttachmentsService {
       const databaseParams: DatabaseParam[] = [
         {
           inputParamName: 'SubjectId',
-          parameterValue: this.mssql.convertToString(message.subjectId)
+          parameterValue: that.mssql.convertToString(message.subjectId)
         },
         {
           inputParamName: 'Message',
@@ -62,13 +62,13 @@ export class AttachmentsService {
         }
       ];
 
-      const dbQuery: string = this.mssql.getQuery(
+      const dbQuery: string = that.mssql.getQuery(
         databaseParams,
         'UspInsertMessage'
       );
 
-      const resultSet = await this.database.query(dbQuery);
-      const resultObj = this.mssql.parseSingleResultSet(resultSet);
+      const resultSet = await that.database.query(dbQuery);
+      const resultObj = that.mssql.parseSingleResultSet(resultSet);
       // MessageId of the inserted message.
       const messageId: number = resultObj.messageId;
 
@@ -84,55 +84,41 @@ export class AttachmentsService {
         attachments: []
       };
 
+      const promiseArray = [];
+
       // Upload file to cloud.
-      files.forEach(async (file) => {
-        const newUuid = uuid();
-        const uploadResult = this.uploadFileToCloud(file, newUuid).then(
-          async (uploadResult) => {
-            // Save as attachment in db.
-            const attachment: MessageAttachmentResult =
-              await this.saveAttachmentDetails(
-                messageId,
-                file,
-                newUuid,
-                uploadResult.Key,
-                uploadResult.Bucket,
-                uploadResult.Location
-              );
-
-            postedMessage.attachments.push({
-              messageAttachmentId: attachment.messageAttachmentId
-            });
-
-            // Emit message to the receiver.
-            this.gatewayService.emitMessageToReceiver(
-              message.toUserId,
-              postedMessage
-            );
-
-            // Emit message back to the sender.
-            this.gatewayService.emitMessageToSender(
-              this.request['user'].userId,
-              postedMessage
-            );
-          }
+      files.forEach((file) => {
+        promiseArray.push(
+          new Promise<void>(function (resolve, reject) {
+            const newUuid = uuid();
+            const uploadResult = that
+              .uploadFileToCloud(file, newUuid)
+              .then((uploadResult) => {
+                // Save as attachment in db.
+                that
+                  .saveAttachmentDetails(
+                    messageId,
+                    file,
+                    newUuid,
+                    uploadResult.Key,
+                    uploadResult.Bucket,
+                    uploadResult.Location
+                  )
+                  .then((attachment) => {
+                    postedMessage.attachments.push({
+                      messageAttachmentId: attachment.messageAttachmentId
+                    });
+                    resolve();
+                  });
+              });
+          })
         );
       });
-    } catch (error) {
-      postedMessage = {
-        subjectId: null,
-        error: 'Unable to save the message',
-        messageId: null,
-        message: message.message,
-        isAttachment: false,
-        createdBy: null,
-        createdAt: null,
-        viewed: false,
-        attachments: []
-      };
 
-      return postedMessage;
-    }
+      Promise.all(promiseArray).then(() => {
+        resolve(postedMessage);
+      });
+    });
   }
 
   // Uploads file to S3 cloud bucket.

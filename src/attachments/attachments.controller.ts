@@ -20,9 +20,9 @@ export class AttachmentsController {
   async uploadMultipleFiles(
     @UploadedFiles() files,
     @Body() body
-  ): Promise<void> {
+  ): Promise<any> {
     // Message object is in string format.
     const message = JSON.parse(body.message) as AttachmentMessageDto;
-    await this.attachmentsService.uploadMultipleFiles(files, message);
+    return await this.attachmentsService.uploadMultipleFiles(files, message);
   }
 }
