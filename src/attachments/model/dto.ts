@@ -24,3 +24,7 @@ export class AttachmentThumbnailDto {
   s3Bucket: string;
   location: string;
 }
+
+export interface ThumbnailIds {
+  thumbnailIdArr: number[];
+}

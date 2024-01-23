@@ -1,14 +1,16 @@
 import {
   Body,
   Controller,
+  Get,
   Post,
+  Query,
   UploadedFile,
   UploadedFiles,
   UseInterceptors
 } from '@nestjs/common';
 import { FileInterceptor, FilesInterceptor } from '@nestjs/platform-express';
 import { AttachmentsService } from './attachments.service';
-import { AttachmentMessageDto } from './model/dto';
+import { AttachmentMessageDto, ThumbnailIds } from './model/dto';
 
 @Controller('attachments')
 export class AttachmentsController {
@@ -24,5 +26,12 @@ export class AttachmentsController {
     // Message object is in string format.
     const message = JSON.parse(body.message) as AttachmentMessageDto;
     return await this.attachmentsService.uploadMultipleFiles(files, message);
+  }
+
+  @Post('get-thumbnails')
+  async getThumbnails(@Body() thumbnailIds: ThumbnailIds): Promise<any> {
+    return await this.attachmentsService.getThumbnails(
+      thumbnailIds.thumbnailIdArr
+    );
   }
 }

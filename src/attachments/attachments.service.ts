@@ -19,9 +19,11 @@ import {
 } from './model/dto';
 import {
   AttachmentThumbnailResult,
-  MessageAttachmentResult
+  MessageAttachmentResult,
+  ThumbnailObject
 } from './model/result';
 import * as sharp from 'sharp';
+import { PkDto } from 'src/database/table-types/shared-dto';
 
 @Injectable()
 export class AttachmentsService {
@@ -41,7 +43,59 @@ export class AttachmentsService {
     s3ForcePathStyle: true
   });
 
-  async uploadMultipleFiles(
+  // Gets thumbnail objects.
+  public async getThumbnails(thumbnailIdArr: number[]): Promise<any> {
+    const that = this;
+    return new Promise<any>(async function (resolve, reject) {
+      const pkDto: PkDto[] = [];
+      thumbnailIdArr.forEach((id) => {
+        pkDto.push({ pk: id });
+      });
+      const databaseParams: DatabaseParam[] = [
+        {
+          tableType: TableTypes.PkTableType,
+          inputParamName: 'AttachmentThumbnailIds',
+          bulkParamValue: pkDto
+        }
+      ];
+
+      const dbQuery: string = that.mssql.getQuery(
+        databaseParams,
+        'UspGetThumbnails'
+      );
+
+      const resultSet = await that.database.query(dbQuery);
+      const resultObjArr = that.mssql.parseMultiResultSet(
+        resultSet
+      ) as AttachmentThumbnailResult[];
+
+      const promiseArray = [];
+      const resultArray = [];
+      // Get thumbnail object for each item in array.
+      resultObjArr.forEach((thumbnail) => {
+        promiseArray.push(
+          new Promise<void>(function (resolve, reject) {
+            const thumbnailObj = that
+
+              .readThumbnailFromCloud(thumbnail.s3Bucket, thumbnail.s3Key)
+              .then((result) => {
+                const thumbnailResult: ThumbnailObject = thumbnail;
+                thumbnailResult.thumbnailUrl = result;
+                resultArray.push(thumbnailResult);
+                resolve();
+              });
+          })
+        );
+      });
+
+      Promise.all(promiseArray).then(() => {
+        resolve(resultArray);
+      });
+    });
+  }
+
+  // Uploads multiple files as attachments.
+  public async uploadMultipleFiles(
     files: Express.Multer.File[],
     message: AttachmentMessageDto
   ): Promise<any> {
@@ -99,63 +153,68 @@ export class AttachmentsService {
         promiseArray.push(
           new Promise<void>(function (resolve, reject) {
             const newUuid = uuid();
-            that.uploadFileToCloud(file, newUuid).then((uploadedAttachment) => {
-              // Save as attachment in db.
-              that
-                .saveAttachmentDetails(
-                  messageId,
-                  file,
-                  newUuid,
-                  uploadedAttachment.Key,
-                  uploadedAttachment.Bucket,
-                  uploadedAttachment.Location
-                )
-                .then(async (attachment) => {
-                  // Create a thumbnail of the attachment.
-                  const fileMimeType = file?.mimetype?.toLowerCase();
-                  if (
-                    fileMimeType.includes('jpeg') ||
-                    fileMimeType.includes('jpg') ||
-                    fileMimeType.includes('png') ||
-                    fileMimeType.includes('gif') ||
-                    fileMimeType.includes('tiff')
-                  ) {
-                    const thumbnailUuid = uuid();
-                    const thumbnailBuffer = await sharp(file.buffer)
-                      .resize(200, 200)
-                      .toBuffer();
-                    that
-                      .uploadThumbnailToCloud(thumbnailBuffer, thumbnailUuid)
-                      .then((uploadedThumbnail) => {
-                        that
-                          .saveThumbnailDetails(
-                            attachment.messageAttachmentId,
-                            file.mimetype,
-                            thumbnailUuid,
-                            uploadedThumbnail.Key,
-                            uploadedThumbnail.Bucket,
-                            uploadedThumbnail.Location
-                          )
-                          .then((savedThumbnail) => {
-                            postedMessage.attachments.push({
-                              messageAttachmentId:
-                                attachment.messageAttachmentId,
-                              attachmentThumbnailId:
-                                savedThumbnail.attachmentThumbnailId
+            that
+              .uploadFileToCloud(file, `${newUuid}-${file.originalname}`)
+              .then((uploadedAttachment) => {
+                // Save as attachment in db.
+                that
+                  .saveAttachmentDetails(
+                    messageId,
+                    file,
+                    newUuid,
+                    uploadedAttachment.Key,
+                    uploadedAttachment.Bucket,
+                    uploadedAttachment.Location
+                  )
+                  .then(async (attachment) => {
+                    // Create a thumbnail of the attachment.
+                    const fileMimeType = file?.mimetype?.toLowerCase();
+                    if (
+                      fileMimeType.includes('jpeg') ||
+                      fileMimeType.includes('jpg') ||
+                      fileMimeType.includes('png') ||
+                      fileMimeType.includes('gif') ||
+                      fileMimeType.includes('tiff')
+                    ) {
+                      const thumbnailUuid = uuid();
+                      const thumbnailBuffer = await sharp(file.buffer)
+                        .resize(200, 200)
+                        .toBuffer();
+                      that
+                        .uploadThumbnailToCloud(
+                          thumbnailBuffer,
+                          `${thumbnailUuid}-${file.originalname}`
+                        )
+                        .then((uploadedThumbnail) => {
+                          that
+                            .saveThumbnailDetails(
+                              attachment.messageAttachmentId,
+                              file.mimetype,
+                              thumbnailUuid,
+                              uploadedThumbnail.Key,
+                              uploadedThumbnail.Bucket,
+                              uploadedThumbnail.Location
+                            )
+                            .then((savedThumbnail) => {
+                              postedMessage.attachments.push({
+                                messageAttachmentId:
+                                  attachment.messageAttachmentId,
+                                attachmentThumbnailId:
+                                  savedThumbnail.attachmentThumbnailId
+                              });
+                              resolve();
                             });
-                            resolve();
-                          });
+                        });
+                    } else {
+                      // Thumbnail cannot be made, save it as it is.
+                      postedMessage.attachments.push({
+                        messageAttachmentId: attachment.messageAttachmentId,
+                        attachmentThumbnailId: null
                       });
-                  } else {
-                    // Thumbnail cannot be made, save it as it is.
-                    postedMessage.attachments.push({
-                      messageAttachmentId: attachment.messageAttachmentId,
-                      attachmentThumbnailId: null
-                    });
-                    resolve();
-                  }
-                });
-            });
+                      resolve();
+                    }
+                  });
+              });
           })
         );
       });
@@ -177,6 +236,20 @@ export class AttachmentsService {
       Body: file.buffer
     };
     const uploadResult = await this.s3.upload(params).promise();
+    return uploadResult;
+  }
+
+  // Reads thumbnail from S3 cloud bucket.
+  private async readThumbnailFromCloud(
+    bucket: string,
+    key: string
+  ): Promise<string> {
+    const params = {
+      Bucket: bucket,
+      Key: key,
+      Expires: 600 // Expires in 600 seconds after creation.
+    };
+    const uploadResult = this.s3.getSignedUrl('getObject', params);
     return uploadResult;
   }
 
