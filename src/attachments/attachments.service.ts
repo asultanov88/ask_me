@@ -19,6 +19,7 @@ import {
 } from './model/dto';
 import {
   AttachmentThumbnailResult,
+  AttachmentUrl,
   MessageAttachmentResult,
   MessageAttachmentWithThumbnailResult,
   ThumbnailObject
@@ -42,6 +43,63 @@ export class AttachmentsService {
     endpoint: process.env.AWS_S3_ENDPOINT,
     s3ForcePathStyle: true
   });
+
+  // Gets attachment url from aws.
+  public async getAttachmentUrl(
+    messageAttachmentId: number
+  ): Promise<AttachmentUrl> {
+    if (!messageAttachmentId || isNaN(messageAttachmentId)) {
+      this.errorHandler.throwCustomError(
+        'messageAttachmentId is not provided.'
+      );
+    }
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'MessageAttachmentId',
+        parameterValue: this.mssql.convertToString(messageAttachmentId)
+      },
+      {
+        inputParamName: 'ClientId',
+        parameterValue: this.mssql.convertToString(
+          this.request['user'].clientId
+        )
+      },
+      {
+        inputParamName: 'ProviderId',
+        parameterValue: this.mssql.convertToString(
+          this.request['user'].providerId
+        )
+      }
+    ];
+
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspGetMessageAttachmentById'
+    );
+
+    let messageAttachment: MessageAttachmentResult = null;
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      messageAttachment = this.mssql.parseSingleResultSet(
+        resultSet
+      ) as MessageAttachmentResult;
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+
+    if (messageAttachment) {
+      const attachmentUrl: AttachmentUrl = {
+        attachmentUrl: await this.readAttachmentFromCloud(
+          messageAttachment.s3Bucket,
+          messageAttachment.s3Key
+        )
+      };
+      return attachmentUrl;
+    } else {
+      this.errorHandler.throwCustomError('Attachment not found.');
+    }
+  }
 
   // Gets message attachments by messageId array.
   public async getMessageAttachments(
@@ -294,6 +352,20 @@ export class AttachmentsService {
 
   // Reads thumbnail from S3 cloud bucket.
   public async readThumbnailFromCloud(
+    bucket: string,
+    key: string
+  ): Promise<string> {
+    const params = {
+      Bucket: bucket,
+      Key: key,
+      Expires: 600 // Expires in 600 seconds after creation.
+    };
+    const uploadResult = this.s3.getSignedUrl('getObject', params);
+    return uploadResult;
+  }
+
+  // Reads attachment from S3 cloud bucket.
+  public async readAttachmentFromCloud(
     bucket: string,
     key: string
   ): Promise<string> {
