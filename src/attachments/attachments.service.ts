@@ -93,144 +93,154 @@ export class AttachmentsService {
     // Required to access THIS object within promise.
     var that = this;
     return new Promise<PostedMessage>(async function (resolve, reject) {
-      let postedMessage: PostedMessage = null;
-      // Insert the message first.
-      const messageDto: MessageDto = {
-        messageId: null,
-        message: message.message,
-        isAttachment: true,
-        createdBy: that.request['user'].userId,
-        createdAt: null,
-        viewed: false
-      };
+      try {
+        let postedMessage: PostedMessage = null;
+        // Insert the message first.
+        const messageDto: MessageDto = {
+          messageId: null,
+          message: message.message,
+          isAttachment: true,
+          createdBy: that.request['user'].userId,
+          createdAt: null,
+          viewed: false
+        };
 
-      const databaseParams: DatabaseParam[] = [
-        {
-          inputParamName: 'SubjectId',
-          parameterValue: that.mssql.convertToString(message.subjectId)
-        },
-        {
-          inputParamName: 'Message',
-          tableType: TableTypes.MessageTableType,
-          bulkParamValue: [messageDto]
-        }
-      ];
+        const databaseParams: DatabaseParam[] = [
+          {
+            inputParamName: 'SubjectId',
+            parameterValue: that.mssql.convertToString(message.subjectId)
+          },
+          {
+            inputParamName: 'Message',
+            tableType: TableTypes.MessageTableType,
+            bulkParamValue: [messageDto]
+          }
+        ];
 
-      const dbQuery: string = that.mssql.getQuery(
-        databaseParams,
-        'UspInsertMessage'
-      );
-
-      const resultSet = await that.database.query(dbQuery);
-      const resultObj = that.mssql.parseSingleResultSet(resultSet);
-      // MessageId of the inserted message.
-      const messageId: number = resultObj.messageId;
-
-      postedMessage = {
-        subjectId: message.subjectId,
-        messageId: messageId,
-        message: resultObj.message,
-        isAttachment: resultObj.isAttachment,
-        createdBy: resultObj.createdBy,
-        createdAt: resultObj.createdAt,
-        viewed: resultObj.viewed,
-        error: null,
-        attachments: []
-      };
-
-      const promiseArray = [];
-
-      // Upload file to cloud.
-      files.forEach((file) => {
-        promiseArray.push(
-          new Promise<void>(function (resolve, reject) {
-            const newUuid = uuid();
-            that
-              .uploadFileToCloud(file, `${newUuid}-${file.originalname}`)
-              .then((uploadedAttachment) => {
-                // Save as attachment in db.
-                that
-                  .saveAttachmentDetails(
-                    messageId,
-                    file,
-                    newUuid,
-                    uploadedAttachment.Key,
-                    uploadedAttachment.Bucket,
-                    uploadedAttachment.Location
-                  )
-                  .then(async (attachment) => {
-                    // Create a thumbnail of the attachment.
-                    const fileMimeType = file?.mimetype?.toLowerCase();
-                    if (
-                      fileMimeType.includes('jpeg') ||
-                      fileMimeType.includes('jpg') ||
-                      fileMimeType.includes('png') ||
-                      fileMimeType.includes('gif') ||
-                      fileMimeType.includes('tiff')
-                    ) {
-                      const thumbnailUuid = uuid();
-                      const thumbnailBuffer = await sharp(file.buffer)
-                        .resize(200, 200)
-                        .toBuffer();
-                      // Upload thumbnail to cloud.
-                      that
-                        .uploadThumbnailToCloud(
-                          thumbnailBuffer,
-                          `${thumbnailUuid}-${file.originalname}`
-                        )
-                        .then((uploadedThumbnail) => {
-                          // Save uploaded thumbnail details in DB.
-                          that
-                            .saveThumbnailDetails(
-                              attachment.messageAttachmentId,
-                              file.mimetype,
-                              thumbnailUuid,
-                              uploadedThumbnail.Key,
-                              uploadedThumbnail.Bucket,
-                              uploadedThumbnail.Location
-                            )
-                            .then((savedThumbnail) => {
-                              postedMessage.attachments.push({
-                                messageAttachmentId:
-                                  attachment.messageAttachmentId,
-                                attachmentThumbnailId:
-                                  savedThumbnail.attachmentThumbnailId
-                              });
-                              resolve();
-                            });
-                        });
-                    } else {
-                      // Thumbnail cannot be made, save it as it is.
-                      postedMessage.attachments.push({
-                        messageAttachmentId: attachment.messageAttachmentId,
-                        attachmentThumbnailId: null
-                      });
-                      resolve();
-                    }
-                  });
-              });
-          })
+        const dbQuery: string = that.mssql.getQuery(
+          databaseParams,
+          'UspInsertMessage'
         );
-      });
 
-      Promise.all(promiseArray).then(async () => {
-        // Get thumnbail object for each attachment.
-        let thumbnaildIdArr: number[] = postedMessage.attachments
-          .filter((attachment) => attachment.attachmentThumbnailId)
-          .map((attachment) => attachment.attachmentThumbnailId);
-        console.log(thumbnaildIdArr);
+        const resultSet = await that.database.query(dbQuery);
+        const resultObj = that.mssql.parseSingleResultSet(resultSet);
+        // MessageId of the inserted message.
+        const messageId: number = resultObj.messageId;
 
-        const thumbnailResult = await that.getThumbnails(thumbnaildIdArr);
-        postedMessage.attachments.forEach((attachment) => {
-          const attachmentThumbnail = thumbnailResult.find(
-            (thumnbnail) =>
-              thumnbnail.attachmentThumbnailId ===
-              attachment.attachmentThumbnailId
+        postedMessage = {
+          subjectId: message.subjectId,
+          messageId: messageId,
+          message: resultObj.message,
+          isAttachment: resultObj.isAttachment,
+          createdBy: resultObj.createdBy,
+          createdAt: resultObj.createdAt,
+          viewed: resultObj.viewed,
+          error: null,
+          attachments: []
+        };
+
+        const promiseArray = [];
+
+        // Upload file to cloud.
+        files.forEach((file) => {
+          promiseArray.push(
+            new Promise<void>(function (resolve, reject) {
+              try {
+                const newUuid = uuid();
+                that
+                  .uploadFileToCloud(file, `${newUuid}-${file.originalname}`)
+                  .then((uploadedAttachment) => {
+                    // Save as attachment in db.
+                    that
+                      .saveAttachmentDetails(
+                        messageId,
+                        file,
+                        newUuid,
+                        uploadedAttachment.Key,
+                        uploadedAttachment.Bucket,
+                        uploadedAttachment.Location
+                      )
+                      .then(async (attachment) => {
+                        // Create a thumbnail of the attachment.
+                        const fileMimeType = file?.mimetype?.toLowerCase();
+                        if (
+                          fileMimeType.includes('jpeg') ||
+                          fileMimeType.includes('jpg') ||
+                          fileMimeType.includes('png') ||
+                          fileMimeType.includes('gif') ||
+                          fileMimeType.includes('tiff')
+                        ) {
+                          const thumbnailUuid = uuid();
+                          const thumbnailBuffer = await sharp(file.buffer)
+                            .resize(200, 200)
+                            .toBuffer();
+                          // Upload thumbnail to cloud.
+                          that
+                            .uploadThumbnailToCloud(
+                              thumbnailBuffer,
+                              `${thumbnailUuid}-${file.originalname}`
+                            )
+                            .then((uploadedThumbnail) => {
+                              // Save uploaded thumbnail details in DB.
+                              that
+                                .saveThumbnailDetails(
+                                  attachment.messageAttachmentId,
+                                  file.mimetype,
+                                  thumbnailUuid,
+                                  uploadedThumbnail.Key,
+                                  uploadedThumbnail.Bucket,
+                                  uploadedThumbnail.Location
+                                )
+                                .then((savedThumbnail) => {
+                                  postedMessage.attachments.push({
+                                    messageAttachmentId:
+                                      attachment.messageAttachmentId,
+                                    attachmentThumbnailId:
+                                      savedThumbnail.attachmentThumbnailId
+                                  });
+                                  resolve();
+                                });
+                            });
+                        } else {
+                          // Thumbnail cannot be made, save it as it is.
+                          postedMessage.attachments.push({
+                            messageAttachmentId: attachment.messageAttachmentId,
+                            attachmentThumbnailId: null
+                          });
+                          resolve();
+                        }
+                      });
+                  });
+              } catch (error) {
+                this.errorHandler.throwCustomError(error);
+                reject();
+              }
+            })
           );
-          attachment.thumbnailUrl = attachmentThumbnail?.thumbnailUrl ?? null;
         });
-        resolve(postedMessage);
-      });
+
+        Promise.all(promiseArray).then(async () => {
+          // Get thumnbail object for each attachment.
+          let thumbnaildIdArr: number[] = postedMessage.attachments
+            .filter((attachment) => attachment.attachmentThumbnailId)
+            .map((attachment) => attachment.attachmentThumbnailId);
+          console.log(thumbnaildIdArr);
+
+          const thumbnailResult = await that.getThumbnails(thumbnaildIdArr);
+          postedMessage.attachments.forEach((attachment) => {
+            const attachmentThumbnail = thumbnailResult.find(
+              (thumnbnail) =>
+                thumnbnail.attachmentThumbnailId ===
+                attachment.attachmentThumbnailId
+            );
+            attachment.thumbnailUrl = attachmentThumbnail?.thumbnailUrl ?? null;
+          });
+          resolve(postedMessage);
+        });
+      } catch (error) {
+        this.errorHandler.throwCustomError('Unable to upload attachment.');
+        reject();
+      }
     });
   }
 
