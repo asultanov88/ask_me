@@ -27,11 +27,4 @@ export class AttachmentsController {
     const message = JSON.parse(body.message) as AttachmentMessageDto;
     return await this.attachmentsService.uploadMultipleFiles(files, message);
   }
-
-  @Post('get-thumbnails')
-  async getThumbnails(@Body() thumbnailIds: ThumbnailIds): Promise<any> {
-    return await this.attachmentsService.getThumbnails(
-      thumbnailIds.thumbnailIdArr
-    );
-  }
 }

@@ -1,3 +1,8 @@
+import {
+  AttachmentThumbnailResult,
+  ThumbnailObject
+} from 'src/attachments/model/result';
+
 export interface ClientProviderMessage {
   subjectId: number;
   title: string;
@@ -7,6 +12,7 @@ export interface ClientProviderMessage {
 export interface Attachment {
   messageAttachmentId: number;
   attachmentThumbnailId: number;
+  thumbnailUrl?: string;
 }
 
 export interface Message {

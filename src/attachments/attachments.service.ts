@@ -44,54 +44,45 @@ export class AttachmentsService {
   });
 
   // Gets thumbnail objects.
-  public async getThumbnails(thumbnailIdArr: number[]): Promise<any> {
-    const that = this;
-    return new Promise<any>(async function (resolve, reject) {
-      const pkDto: PkDto[] = [];
-      thumbnailIdArr.forEach((id) => {
-        pkDto.push({ pk: id });
-      });
-      const databaseParams: DatabaseParam[] = [
-        {
-          tableType: TableTypes.PkTableType,
-          inputParamName: 'AttachmentThumbnailIds',
-          bulkParamValue: pkDto
-        }
-      ];
+  public async getThumbnails(
+    thumbnailIdArr: number[]
+  ): Promise<ThumbnailObject[]> {
+    const pkDto: PkDto[] = [];
+    thumbnailIdArr.forEach((id) => {
+      pkDto.push({ pk: id });
+    });
+    const databaseParams: DatabaseParam[] = [
+      {
+        tableType: TableTypes.PkTableType,
+        inputParamName: 'AttachmentThumbnailIds',
+        bulkParamValue: pkDto
+      }
+    ];
 
-      const dbQuery: string = that.mssql.getQuery(
-        databaseParams,
-        'UspGetThumbnails'
-      );
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspGetThumbnails'
+    );
 
-      const resultSet = await that.database.query(dbQuery);
-      const resultObjArr = that.mssql.parseMultiResultSet(
-        resultSet
-      ) as AttachmentThumbnailResult[];
+    const resultSet = await this.database.query(dbQuery);
+    const resultObjArr = this.mssql.parseMultiResultSet(
+      resultSet
+    ) as AttachmentThumbnailResult[];
 
-      const promiseArray = [];
-      const resultArray = [];
-      // Get thumbnail object for each item in array.
-      resultObjArr.forEach((thumbnail) => {
-        promiseArray.push(
-          new Promise<void>(function (resolve, reject) {
-            const thumbnailObj = that
-
-              .readThumbnailFromCloud(thumbnail.s3Bucket, thumbnail.s3Key)
-              .then((result) => {
-                const thumbnailResult: ThumbnailObject = thumbnail;
-                thumbnailResult.thumbnailUrl = result;
-                resultArray.push(thumbnailResult);
-                resolve();
-              });
-          })
-        );
-      });
-
-      Promise.all(promiseArray).then(() => {
-        resolve(resultArray);
+    const resultArray = [];
+    // Get thumbnail object for each item in array.
+    resultObjArr.forEach((thumbnail) => {
+      const thumbnailObj = this.readThumbnailFromCloud(
+        thumbnail.s3Bucket,
+        thumbnail.s3Key
+      ).then((result) => {
+        const thumbnailResult: ThumbnailObject = thumbnail;
+        thumbnailResult.thumbnailUrl = result;
+        resultArray.push(thumbnailResult);
       });
     });
+
+    return resultArray;
   }
 
   // Uploads multiple files as attachments.
@@ -99,6 +90,7 @@ export class AttachmentsService {
     files: Express.Multer.File[],
     message: AttachmentMessageDto
   ): Promise<any> {
+    // Required to access THIS object within promise.
     var that = this;
     return new Promise<PostedMessage>(async function (resolve, reject) {
       let postedMessage: PostedMessage = null;
@@ -180,12 +172,14 @@ export class AttachmentsService {
                       const thumbnailBuffer = await sharp(file.buffer)
                         .resize(200, 200)
                         .toBuffer();
+                      // Upload thumbnail to cloud.
                       that
                         .uploadThumbnailToCloud(
                           thumbnailBuffer,
                           `${thumbnailUuid}-${file.originalname}`
                         )
                         .then((uploadedThumbnail) => {
+                          // Save uploaded thumbnail details in DB.
                           that
                             .saveThumbnailDetails(
                               attachment.messageAttachmentId,
@@ -219,7 +213,22 @@ export class AttachmentsService {
         );
       });
 
-      Promise.all(promiseArray).then(() => {
+      Promise.all(promiseArray).then(async () => {
+        // Get thumnbail object for each attachment.
+        let thumbnaildIdArr: number[] = postedMessage.attachments
+          .filter((attachment) => attachment.attachmentThumbnailId)
+          .map((attachment) => attachment.attachmentThumbnailId);
+        console.log(thumbnaildIdArr);
+
+        const thumbnailResult = await that.getThumbnails(thumbnaildIdArr);
+        postedMessage.attachments.forEach((attachment) => {
+          const attachmentThumbnail = thumbnailResult.find(
+            (thumnbnail) =>
+              thumnbnail.attachmentThumbnailId ===
+              attachment.attachmentThumbnailId
+          );
+          attachment.thumbnailUrl = attachmentThumbnail?.thumbnailUrl ?? null;
+        });
         resolve(postedMessage);
       });
     });
