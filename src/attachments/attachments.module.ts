@@ -11,7 +11,7 @@ import { GatewayService } from 'src/gateway/gateway.service';
 @Module({
   imports: [TypeOrmModule.forFeature([DatabaseEntity])],
   controllers: [AttachmentsController],
-  providers: [MsSql, ErrorHandler, AttachmentsService, GatewayService],
+  providers: [MsSql, ErrorHandler, AttachmentsService],
   exports: [AttachmentsService]
 })
 export class AttachmentsModule {}

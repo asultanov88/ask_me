@@ -32,7 +32,6 @@ export class AttachmentsService {
     private database: Repository<null>,
     private mssql: MsSql,
     private errorHandler: ErrorHandler,
-    private gatewayService: GatewayService,
     @Inject(REQUEST) private readonly request: Request
   ) {}
 
@@ -212,7 +211,7 @@ export class AttachmentsService {
                       });
                   });
               } catch (error) {
-                this.errorHandler.throwCustomError(error);
+                that.errorHandler.throwCustomError(error);
                 reject();
               }
             })
@@ -224,7 +223,6 @@ export class AttachmentsService {
           let thumbnaildIdArr: number[] = postedMessage.attachments
             .filter((attachment) => attachment.attachmentThumbnailId)
             .map((attachment) => attachment.attachmentThumbnailId);
-          console.log(thumbnaildIdArr);
 
           const thumbnailResult = await that.getThumbnails(thumbnaildIdArr);
           postedMessage.attachments.forEach((attachment) => {
@@ -238,7 +236,7 @@ export class AttachmentsService {
           resolve(postedMessage);
         });
       } catch (error) {
-        this.errorHandler.throwCustomError('Unable to upload attachment.');
+        that.errorHandler.throwCustomError('Unable to upload attachment.');
         reject();
       }
     });
