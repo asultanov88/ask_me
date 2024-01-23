@@ -195,7 +195,9 @@ export class AttachmentsService {
                                     messageAttachmentId:
                                       attachment.messageAttachmentId,
                                     attachmentThumbnailId:
-                                      savedThumbnail.attachmentThumbnailId
+                                      savedThumbnail.attachmentThumbnailId,
+                                    attachmentOriginalName:
+                                      attachment.originalName
                                   });
                                   resolve();
                                 });
@@ -204,6 +206,7 @@ export class AttachmentsService {
                           // Thumbnail cannot be made, save it as it is.
                           postedMessage.attachments.push({
                             messageAttachmentId: attachment.messageAttachmentId,
+                            attachmentOriginalName: attachment.originalName,
                             attachmentThumbnailId: null
                           });
                           resolve();

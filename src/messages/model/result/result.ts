@@ -11,6 +11,7 @@ export interface ClientProviderMessage {
 
 export interface Attachment {
   messageAttachmentId: number;
+  attachmentOriginalName: string;
   attachmentThumbnailId: number;
   thumbnailUrl?: string;
 }
