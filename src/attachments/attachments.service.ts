@@ -20,6 +20,7 @@ import {
 import {
   AttachmentThumbnailResult,
   MessageAttachmentResult,
+  MessageAttachmentWithThumbnailResult,
   ThumbnailObject
 } from './model/result';
 import * as sharp from 'sharp';
@@ -41,6 +42,38 @@ export class AttachmentsService {
     endpoint: process.env.AWS_S3_ENDPOINT,
     s3ForcePathStyle: true
   });
+
+  // Gets message attachments by messageId array.
+  public async getMessageAttachments(
+    messageIdsArr: number[]
+  ): Promise<MessageAttachmentWithThumbnailResult[]> {
+    const messageIdPkDto: PkDto[] = [];
+    messageIdsArr.forEach((messageId) => {
+      messageIdPkDto.push({
+        pk: messageId
+      });
+    });
+    const databaseParams: DatabaseParam[] = [
+      {
+        tableType: TableTypes.PkTableType,
+        inputParamName: 'MessageIds',
+        bulkParamValue: messageIdPkDto
+      }
+    ];
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspGetMessageAttachments'
+    );
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const resultObj = this.mssql.parseMultiResultSet(
+        resultSet
+      ) as MessageAttachmentWithThumbnailResult[];
+      return resultObj ? resultObj : [];
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
 
   // Gets thumbnail objects.
   public async getThumbnails(
@@ -223,7 +256,7 @@ export class AttachmentsService {
 
         Promise.all(promiseArray).then(async () => {
           // Get thumnbail object for each attachment.
-          let thumbnaildIdArr: number[] = postedMessage.attachments
+          const thumbnaildIdArr: number[] = postedMessage.attachments
             .filter((attachment) => attachment.attachmentThumbnailId)
             .map((attachment) => attachment.attachmentThumbnailId);
 
@@ -260,7 +293,7 @@ export class AttachmentsService {
   }
 
   // Reads thumbnail from S3 cloud bucket.
-  private async readThumbnailFromCloud(
+  public async readThumbnailFromCloud(
     bucket: string,
     key: string
   ): Promise<string> {

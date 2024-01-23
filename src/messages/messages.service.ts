@@ -2,13 +2,23 @@ import { Body, Inject, Injectable } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
+import { AttachmentsService } from 'src/attachments/attachments.service';
+import {
+  MessageAttachmentResult,
+  MessageAttachmentWithThumbnailResult,
+  ThumbnailObject
+} from 'src/attachments/model/result';
 import { DatabaseEntity } from 'src/database/entities/database';
+import { TableTypes } from 'src/database/table-types/table-types';
+import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { MsSql } from 'src/database/typeorm/mssql';
 import { Repository } from 'typeorm';
-import { MessageDto, NewMessage, SubjectDto } from './model/dto/dto';
-import { DatabaseParam } from 'src/database/typeorm/database-params';
-import { TableTypes } from 'src/database/table-types/table-types';
-import { ClientProviderMessage, Message } from './model/result/result';
+import { SubjectDto } from './model/dto/dto';
+import {
+  Attachment,
+  ClientProviderMessage,
+  Message
+} from './model/result/result';
 
 @Injectable()
 export class MessagesService {
@@ -17,6 +27,7 @@ export class MessagesService {
     private database: Repository<null>,
     private mssql: MsSql,
     private errorHandler: ErrorHandler,
+    private attachmentsService: AttachmentsService,
     @Inject(REQUEST) private readonly request: Request
   ) {}
 
@@ -105,8 +116,55 @@ export class MessagesService {
 
     try {
       const resultSet = await this.database.query(dbQuery);
-      const resultObj = this.mssql.parseMultiResultSet(resultSet);
-      return resultObj ? (resultObj as Message[]) : [];
+      const subjectMessages = this.mssql.parseMultiResultSet(
+        resultSet
+      ) as Message[];
+
+      // Get message atatachments.
+      const messageIdsArr: number[] = subjectMessages.map((m) => m.messageId);
+      const messageAttachmentsArr: MessageAttachmentWithThumbnailResult[] =
+        await this.attachmentsService.getMessageAttachments(messageIdsArr);
+
+      subjectMessages.forEach((sm) => {
+        const relatedAttachments = messageAttachmentsArr.filter(
+          (ma) => ma.messageId === sm.messageId
+        );
+        const attachments: Attachment[] = [];
+        relatedAttachments.forEach((ra) => {
+          attachments.push({
+            messageAttachmentId: ra.messageAttachmentId,
+            attachmentOriginalName: ra.originalName,
+            attachmentThumbnailId: ra.attachmentThumbnailId,
+            thumbnailUrl: null
+          });
+        });
+        sm.attachments = attachments;
+      });
+
+      let allThumbnailIdsArr: number[] = [];
+      // Get attachment thumbnails.
+      subjectMessages.forEach((sm) => {
+        const messageThumbnaildIdArr: number[] = sm.attachments
+          .filter((attachment) => attachment.attachmentThumbnailId)
+          .map((attachment) => attachment.attachmentThumbnailId);
+
+        allThumbnailIdsArr = allThumbnailIdsArr.concat(messageThumbnaildIdArr);
+      });
+
+      const allThumbnails: ThumbnailObject[] =
+        await this.attachmentsService.getThumbnails(allThumbnailIdsArr);
+
+      subjectMessages.forEach((sm) => {
+        sm.attachments.forEach((attachment) => {
+          attachment.thumbnailUrl =
+            allThumbnails.find(
+              (t) =>
+                t.attachmentThumbnailId === attachment.attachmentThumbnailId
+            )?.thumbnailUrl ?? null;
+        });
+      });
+
+      return subjectMessages;
     } catch (error) {
       this.errorHandler.throwDatabaseError(error);
     }
@@ -141,43 +199,6 @@ export class MessagesService {
       const resultSet = await this.database.query(dbQuery);
       const resultObj = this.mssql.parseMultiResultSet(resultSet);
       return resultObj ? (resultObj as ClientProviderMessage[]) : [];
-    } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
-    }
-  }
-
-  // Posts new message.
-  async postNewMessage(@Body() newMessage: NewMessage): Promise<number> {
-    const messageDto: MessageDto = {
-      messageId: null,
-      message: newMessage.message,
-      isAttachment: newMessage.isAttachment ?? false,
-      createdBy: this.request['user'].userId,
-      createdAt: null,
-      viewed: false
-    };
-
-    const databaseParams: DatabaseParam[] = [
-      {
-        inputParamName: 'SubjectId',
-        parameterValue: this.mssql.convertToString(newMessage.subjectId)
-      },
-      {
-        inputParamName: 'Message',
-        tableType: TableTypes.MessageTableType,
-        bulkParamValue: [messageDto]
-      }
-    ];
-
-    const dbQuery: string = this.mssql.getQuery(
-      databaseParams,
-      'UspInsertMessage'
-    );
-
-    try {
-      const resultSet = await this.database.query(dbQuery);
-      const resultObj = this.mssql.parseSingleResultSet(resultSet);
-      return resultObj ? resultObj : { success: false };
     } catch (error) {
       this.errorHandler.throwDatabaseError(error);
     }

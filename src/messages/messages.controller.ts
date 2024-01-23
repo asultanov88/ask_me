@@ -20,11 +20,6 @@ export class MessagesController {
     return await this.messageService.postNewSubject(subject);
   }
 
-  @Post('message')
-  async postNewMessage(@Body() newMessage: NewMessage): Promise<number> {
-    return await this.messageService.postNewMessage(newMessage);
-  }
-
   @Get('client-provider-subjects')
   async getClientProviderSubjects(@Query() query): Promise<any> {
     return await this.messageService.getClientProviderSubjects(

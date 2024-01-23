@@ -7,6 +7,11 @@ export interface MessageAttachmentResult {
   s3Bucket: string;
 }
 
+export interface MessageAttachmentWithThumbnailResult
+  extends MessageAttachmentResult {
+  attachmentThumbnailId: number;
+}
+
 export interface AttachmentThumbnailResult {
   attachmentThumbnailId: number;
   messageAttachmentId: number;
