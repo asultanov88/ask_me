@@ -131,11 +131,7 @@ export class MsSql {
       };
     }
     // Single parameter value.
-    if (
-      !param.bulkParamValue ||
-      param?.bulkParamValue?.length < 1 ||
-      !param.tableType
-    ) {
+    if (!param.bulkParamValue || !param.tableType) {
       processedParam = {
         paramName: param.inputParamName,
         paramValue: this.escapeSql(

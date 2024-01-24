@@ -16,6 +16,10 @@ export interface Attachment {
   thumbnailUrl?: string;
 }
 
+export interface MessageById extends Message {
+  subjectId: number;
+}
+
 export interface Message {
   messageId: number;
   message: string;

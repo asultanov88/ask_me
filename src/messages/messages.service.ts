@@ -3,8 +3,8 @@ import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
 import { AttachmentsService } from 'src/attachments/attachments.service';
+import { AttachmentMessageDto } from 'src/attachments/model/dto';
 import {
-  MessageAttachmentResult,
   MessageAttachmentWithThumbnailResult,
   ThumbnailObject
 } from 'src/attachments/model/result';
@@ -12,12 +12,14 @@ import { DatabaseEntity } from 'src/database/entities/database';
 import { TableTypes } from 'src/database/table-types/table-types';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { MsSql } from 'src/database/typeorm/mssql';
+import { PostedMessage } from 'src/gateway/dto';
 import { Repository } from 'typeorm';
-import { SubjectDto } from './model/dto/dto';
+import { MessageDto, SubjectDto } from './model/dto/dto';
 import {
   Attachment,
   ClientProviderMessage,
-  Message
+  Message,
+  MessageById
 } from './model/result/result';
 
 @Injectable()
@@ -30,6 +32,56 @@ export class MessagesService {
     private attachmentsService: AttachmentsService,
     @Inject(REQUEST) private readonly request: Request
   ) {}
+
+  // Posts a message with attachment.
+  async postAttachmentMessage(
+    attachmentMessage: AttachmentMessageDto
+  ): Promise<any> {
+    const messageDto: MessageDto = {
+      messageId: null,
+      message: attachmentMessage.message,
+      isAttachment: true,
+      createdBy: this.request['user'].userId,
+      createdAt: null,
+      viewed: false
+    };
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        tableType: TableTypes.MessageTableType,
+        inputParamName: 'Message',
+        bulkParamValue: [messageDto]
+      },
+      {
+        inputParamName: 'SubjectId',
+        parameterValue: this.mssql.convertToString(attachmentMessage.subjectId)
+      }
+    ];
+
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspInsertMessage'
+    );
+
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const resultObj = this.mssql.parseSingleResultSet(resultSet);
+      const postedMessage: PostedMessage = {
+        subjectId: attachmentMessage.subjectId,
+        messageId: resultObj.messageId,
+        message: resultObj.message,
+        isAttachment: resultObj.isAttachment,
+        createdBy: resultObj.createdBy,
+        createdAt: resultObj.createdAt,
+        viewed: resultObj.viewed,
+        error: null,
+        attachments: []
+      };
+      return postedMessage;
+    } catch (error) {
+      this.errorHandler.throwDatabaseError(error);
+    }
+  }
 
   // Gets subject list between provider and a client.
   async getProviderClientSubjects(clientId: number): Promise<any> {
@@ -67,7 +119,7 @@ export class MessagesService {
     subjectId: number,
     chunkCount: number,
     chunkNum: number
-  ): Promise<any> {
+  ): Promise<Message[]> {
     if (!subjectId || isNaN(subjectId)) {
       this.errorHandler.throwCustomError(
         'subjectId is required and must be a number.'

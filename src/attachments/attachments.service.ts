@@ -2,21 +2,19 @@ import { Inject, Injectable } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { S3 } from 'aws-sdk';
+import * as sharp from 'sharp';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
 import { DatabaseEntity } from 'src/database/entities/database';
+import { PkDto } from 'src/database/table-types/shared-dto';
+import { TableTypes } from 'src/database/table-types/table-types';
+import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { MsSql } from 'src/database/typeorm/mssql';
+import { PostedMessage } from 'src/gateway/dto';
+import { MessagesService } from 'src/messages/messages.service';
+import { Attachment, MessageById } from 'src/messages/model/result/result';
 import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
-import { MessageDto } from 'src/messages/model/dto/dto';
-import { DatabaseParam } from 'src/database/typeorm/database-params';
-import { TableTypes } from 'src/database/table-types/table-types';
-import { PostedMessage } from 'src/gateway/dto';
-import { GatewayService } from 'src/gateway/gateway.service';
-import {
-  AttachmentMessageDto,
-  AttachmentThumbnailDto,
-  MessageAttachmentDto
-} from './model/dto';
+import { AttachmentThumbnailDto, MessageAttachmentDto } from './model/dto';
 import {
   AttachmentThumbnailResult,
   AttachmentUrl,
@@ -24,8 +22,6 @@ import {
   MessageAttachmentWithThumbnailResult,
   ThumbnailObject
 } from './model/result';
-import * as sharp from 'sharp';
-import { PkDto } from 'src/database/table-types/shared-dto';
 
 @Injectable()
 export class AttachmentsService {
@@ -178,59 +174,16 @@ export class AttachmentsService {
   // Uploads multiple files as attachments.
   public async uploadMultipleFiles(
     files: Express.Multer.File[],
-    message: AttachmentMessageDto
+    messageId: number
   ): Promise<any> {
+    if (!messageId || isNaN(messageId)) {
+      this.errorHandler.throwCustomError('message is not provided or invalid.');
+    }
     // Required to access THIS object within promise.
     var that = this;
     return new Promise<PostedMessage>(async function (resolve, reject) {
       try {
-        let postedMessage: PostedMessage = null;
-        // Insert the message first.
-        const messageDto: MessageDto = {
-          messageId: null,
-          message: message.message,
-          isAttachment: true,
-          createdBy: that.request['user'].userId,
-          createdAt: null,
-          viewed: false
-        };
-
-        const databaseParams: DatabaseParam[] = [
-          {
-            inputParamName: 'SubjectId',
-            parameterValue: that.mssql.convertToString(message.subjectId)
-          },
-          {
-            inputParamName: 'Message',
-            tableType: TableTypes.MessageTableType,
-            bulkParamValue: [messageDto]
-          }
-        ];
-
-        const dbQuery: string = that.mssql.getQuery(
-          databaseParams,
-          'UspInsertMessage'
-        );
-
-        const resultSet = await that.database.query(dbQuery);
-        const resultObj = that.mssql.parseSingleResultSet(resultSet);
-        // MessageId of the inserted message.
-        const messageId: number = resultObj.messageId;
-
-        postedMessage = {
-          subjectId: message.subjectId,
-          messageId: messageId,
-          message: resultObj.message,
-          isAttachment: resultObj.isAttachment,
-          createdBy: resultObj.createdBy,
-          createdAt: resultObj.createdAt,
-          viewed: resultObj.viewed,
-          error: null,
-          attachments: []
-        };
-
         const promiseArray = [];
-
         // Upload file to cloud.
         files.forEach((file) => {
           promiseArray.push(
@@ -282,24 +235,10 @@ export class AttachmentsService {
                                   uploadedThumbnail.Location
                                 )
                                 .then((savedThumbnail) => {
-                                  postedMessage.attachments.push({
-                                    messageAttachmentId:
-                                      attachment.messageAttachmentId,
-                                    attachmentThumbnailId:
-                                      savedThumbnail.attachmentThumbnailId,
-                                    attachmentOriginalName:
-                                      attachment.originalName
-                                  });
                                   resolve();
                                 });
                             });
                         } else {
-                          // Thumbnail cannot be made, save it as it is.
-                          postedMessage.attachments.push({
-                            messageAttachmentId: attachment.messageAttachmentId,
-                            attachmentOriginalName: attachment.originalName,
-                            attachmentThumbnailId: null
-                          });
                           resolve();
                         }
                       });
@@ -313,20 +252,19 @@ export class AttachmentsService {
         });
 
         Promise.all(promiseArray).then(async () => {
-          // Get thumnbail object for each attachment.
-          const thumbnaildIdArr: number[] = postedMessage.attachments
-            .filter((attachment) => attachment.attachmentThumbnailId)
-            .map((attachment) => attachment.attachmentThumbnailId);
+          const message: MessageById = await that.getMessageById(messageId);
+          const postedMessage: PostedMessage = {
+            subjectId: message.subjectId,
+            messageId: message.messageId,
+            message: message.message,
+            isAttachment: message.isAttachment,
+            createdBy: message.createdBy,
+            createdAt: message.createdAt,
+            viewed: message.viewed,
+            error: null,
+            attachments: message.attachments
+          };
 
-          const thumbnailResult = await that.getThumbnails(thumbnaildIdArr);
-          postedMessage.attachments.forEach((attachment) => {
-            const attachmentThumbnail = thumbnailResult.find(
-              (thumnbnail) =>
-                thumnbnail.attachmentThumbnailId ===
-                attachment.attachmentThumbnailId
-            );
-            attachment.thumbnailUrl = attachmentThumbnail?.thumbnailUrl ?? null;
-          });
           resolve(postedMessage);
         });
       } catch (error) {
@@ -470,5 +408,60 @@ export class AttachmentsService {
     ) as MessageAttachmentResult;
 
     return resultObj;
+  }
+
+  // Gets a single message with messageId.
+  private async getMessageById(messageId: number): Promise<MessageById> {
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'MessageId',
+        parameterValue: this.mssql.convertToString(messageId)
+      }
+    ];
+
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspGetMessageById'
+    );
+
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const message = this.mssql.parseSingleResultSet(resultSet) as MessageById;
+      message.attachments = [];
+
+      // Get message atatachments.
+      const messageAttachmentArr: MessageAttachmentWithThumbnailResult[] =
+        await this.getMessageAttachments([messageId]);
+
+      messageAttachmentArr.forEach((ma) => {
+        const attachment: Attachment = {
+          attachmentOriginalName: ma.originalName,
+          attachmentThumbnailId: ma.attachmentThumbnailId,
+          messageAttachmentId: ma.messageAttachmentId,
+          thumbnailUrl: null
+        };
+        message.attachments.push(attachment);
+      });
+
+      // Get attachment thumbnails.
+      const messageThumbnaildIdArr: number[] = message.attachments
+        .filter((attachment) => attachment.attachmentThumbnailId)
+        .map((attachment) => attachment.attachmentThumbnailId);
+
+      const allThumbnails: ThumbnailObject[] = await this.getThumbnails(
+        messageThumbnaildIdArr
+      );
+
+      message.attachments.forEach((attachment) => {
+        attachment.thumbnailUrl =
+          allThumbnails.find(
+            (t) => t.attachmentThumbnailId === attachment.attachmentThumbnailId
+          )?.thumbnailUrl ?? null;
+      });
+
+      return message;
+    } catch (error) {
+      this.errorHandler.throwCustomError(error);
+    }
   }
 }

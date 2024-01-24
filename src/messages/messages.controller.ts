@@ -1,10 +1,19 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
 import { MessagesService } from './messages.service';
 import { NewMessage, SubjectDto } from './model/dto/dto';
+import { AttachmentMessageDto } from 'src/attachments/model/dto';
+import { PostedMessage } from 'src/gateway/dto';
 
 @Controller('messages')
 export class MessagesController {
   constructor(private readonly messageService: MessagesService) {}
+
+  @Post('attachment-message')
+  async postAttachmentMessage(
+    @Body() attachmentMessage: AttachmentMessageDto
+  ): Promise<PostedMessage> {
+    return await this.messageService.postAttachmentMessage(attachmentMessage);
+  }
 
   @Get('subject-messages')
   async getSubjectMessages(@Query() query): Promise<any> {
