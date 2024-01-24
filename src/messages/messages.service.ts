@@ -37,6 +37,11 @@ export class MessagesService {
   async postAttachmentMessage(
     attachmentMessage: AttachmentMessageDto
   ): Promise<any> {
+    if (!attachmentMessage.isAttachment) {
+      this.errorHandler.throwCustomError(
+        'IsAttachment must be true to post attachment message.'
+      );
+    }
     const messageDto: MessageDto = {
       messageId: null,
       message: attachmentMessage.message,
