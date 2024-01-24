@@ -22,7 +22,6 @@ export class AttachmentsController {
     @Body() body
   ): Promise<any> {
     // Message object is in string format.
-
     const messageId: number = parseInt(body.messageId, 10);
     return await this.attachmentsService.uploadMultipleFiles(files, messageId);
   }

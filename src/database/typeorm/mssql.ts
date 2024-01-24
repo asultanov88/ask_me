@@ -174,7 +174,7 @@ export class MsSql {
       input.toLowerCase().trim() !== 'true' &&
       input.toLowerCase().trim() !== 'false'
     ) {
-      escapedResult = `'${input ? input : ''}'`;
+      escapedResult = `N'${input ? input : ''}'`;
     } else if (
       input.toLowerCase().trim() === 'true' ||
       input.toLowerCase().trim() === 'false'

@@ -1,8 +1,8 @@
 import { Body, Controller, Get, Post, Query } from '@nestjs/common';
-import { MessagesService } from './messages.service';
-import { NewMessage, SubjectDto } from './model/dto/dto';
 import { AttachmentMessageDto } from 'src/attachments/model/dto';
 import { PostedMessage } from 'src/gateway/dto';
+import { MessagesService } from './messages.service';
+import { SubjectDto } from './model/dto/dto';
 
 @Controller('messages')
 export class MessagesController {
