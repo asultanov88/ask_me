@@ -186,6 +186,8 @@ export class AttachmentsService {
         const promiseArray = [];
         // Upload file to cloud.
         files.forEach((file) => {
+          // Trim any blank space in file name.
+          file.originalname = file.originalname.replaceAll(' ', '');
           promiseArray.push(
             new Promise<void>(function (resolve, reject) {
               try {
