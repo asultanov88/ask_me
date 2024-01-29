@@ -385,6 +385,7 @@ export class AttachmentsService {
       messageAttachmentId: null,
       messageId: messageId,
       originalName: file.originalname,
+      mimeType: file.mimetype,
       uuid: uuid,
       s3Key: s3Key,
       s3Bucket: s3Bucket,
@@ -438,6 +439,7 @@ export class AttachmentsService {
       messageAttachmentArr.forEach((ma) => {
         const attachment: Attachment = {
           attachmentOriginalName: ma.originalName,
+          attachmentMimeType: ma.mimeType,
           attachmentThumbnailId: ma.attachmentThumbnailId,
           messageAttachmentId: ma.messageAttachmentId,
           thumbnailUrl: null

@@ -82,6 +82,7 @@ export class TableTypes {
       'messageAttachmentId',
       'messageId',
       'originalName',
+      'mimeType',
       'uuid',
       's3Key',
       's3Bucket',

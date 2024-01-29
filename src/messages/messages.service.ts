@@ -191,6 +191,7 @@ export class MessagesService {
           attachments.push({
             messageAttachmentId: ra.messageAttachmentId,
             attachmentOriginalName: ra.originalName,
+            attachmentMimeType: ra.mimeType,
             attachmentThumbnailId: ra.attachmentThumbnailId,
             thumbnailUrl: null
           });
