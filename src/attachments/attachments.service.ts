@@ -173,107 +173,91 @@ export class AttachmentsService {
 
   // Uploads multiple files as attachments.
   public async uploadMultipleFiles(
-    files: Express.Multer.File[],
-    messageId: number
+    file: Express.Multer.File,
+    messageId: number,
+    thumbnailBlob: Blob
   ): Promise<any> {
     if (!messageId || isNaN(messageId)) {
       this.errorHandler.throwCustomError('message is not provided or invalid.');
     }
     // Required to access THIS object within promise.
-    var that = this;
-    return new Promise<PostedMessage>(async function (resolve, reject) {
-      try {
-        const promiseArray = [];
-        // Upload file to cloud.
-        files.forEach((file) => {
-          // Trim any blank space in file name.
-          file.originalname = file.originalname.replaceAll(' ', '');
-          promiseArray.push(
-            new Promise<void>(function (resolve, reject) {
-              try {
-                const newUuid = uuid();
-                that
-                  .uploadFileToCloud(file, `${newUuid}-${file.originalname}`)
-                  .then((uploadedAttachment) => {
-                    // Save as attachment in db.
-                    that
-                      .saveAttachmentDetails(
-                        messageId,
-                        file,
-                        newUuid,
-                        uploadedAttachment.Key,
-                        uploadedAttachment.Bucket,
-                        uploadedAttachment.Location
-                      )
-                      .then(async (attachment) => {
-                        // Create a thumbnail of the attachment.
-                        const fileMimeType = file?.mimetype?.toLowerCase();
-                        if (
-                          fileMimeType.includes('jpeg') ||
-                          fileMimeType.includes('jpg') ||
-                          fileMimeType.includes('png') ||
-                          fileMimeType.includes('gif') ||
-                          fileMimeType.includes('tiff')
-                        ) {
-                          const thumbnailUuid = uuid();
-                          const thumbnailBuffer = await sharp(file.buffer)
-                            .resize(200, 200)
-                            .toBuffer();
-                          // Upload thumbnail to cloud.
-                          that
-                            .uploadThumbnailToCloud(
-                              thumbnailBuffer,
-                              `${thumbnailUuid}-${file.originalname}`
-                            )
-                            .then((uploadedThumbnail) => {
-                              // Save uploaded thumbnail details in DB.
-                              that
-                                .saveThumbnailDetails(
-                                  attachment.messageAttachmentId,
-                                  file.mimetype,
-                                  thumbnailUuid,
-                                  uploadedThumbnail.Key,
-                                  uploadedThumbnail.Bucket,
-                                  uploadedThumbnail.Location
-                                )
-                                .then((savedThumbnail) => {
-                                  resolve();
-                                });
-                            });
-                        } else {
-                          resolve();
-                        }
-                      });
-                  });
-              } catch (error) {
-                that.errorHandler.throwCustomError(error);
-                reject();
-              }
-            })
+    try {
+      // Upload file to cloud.
+      // Trim any blank space in file name.
+      file.originalname = file.originalname.replaceAll(' ', '');
+      const newUuid = uuid();
+      const uploadedAttachment = await this.uploadFileToCloud(
+        file,
+        `${newUuid}-${file.originalname}`
+      );
+      // Save as attachment in db.
+      const attachment = await this.saveAttachmentDetails(
+        messageId,
+        file,
+        newUuid,
+        uploadedAttachment.Key,
+        uploadedAttachment.Bucket,
+        uploadedAttachment.Location
+      );
+
+      if (!thumbnailBlob) {
+        // Create a thumbnail of the attachment.
+        const fileMimeType = file?.mimetype?.toLowerCase();
+        if (fileMimeType.includes('image')) {
+          const thumbnailUuid = uuid();
+          const thumbnailBuffer = await sharp(file.buffer)
+            .resize(200, 200)
+            .toBuffer();
+          // Upload thumbnail to cloud.
+          const uploadedThumbnail = await this.uploadThumbnailToCloud(
+            thumbnailBuffer,
+            `${thumbnailUuid}-${file.originalname}`
           );
-        });
 
-        Promise.all(promiseArray).then(async () => {
-          const message: MessageById = await that.getMessageById(messageId);
-          const postedMessage: PostedMessage = {
-            subjectId: message.subjectId,
-            messageId: message.messageId,
-            message: message.message,
-            isAttachment: message.isAttachment,
-            createdBy: message.createdBy,
-            createdAt: message.createdAt,
-            viewed: message.viewed,
-            error: null,
-            attachments: message.attachments
-          };
+          await this.saveThumbnailDetails(
+            attachment.messageAttachmentId,
+            file.mimetype,
+            thumbnailUuid,
+            uploadedThumbnail.Key,
+            uploadedThumbnail.Bucket,
+            uploadedThumbnail.Location
+          );
+        }
+      } else {
+        const thumbnailUuid = uuid();
 
-          resolve(postedMessage);
-        });
-      } catch (error) {
-        that.errorHandler.throwCustomError('Unable to upload attachment.');
-        reject();
+        const uploadedThumbnail = await this.uploadThumbnailToCloud(
+          Buffer.from(await thumbnailBlob.arrayBuffer()),
+          `${thumbnailUuid}-${file.originalname}`
+        );
+
+        await this.saveThumbnailDetails(
+          attachment.messageAttachmentId,
+          file.mimetype,
+          thumbnailUuid,
+          uploadedThumbnail.Key,
+          uploadedThumbnail.Bucket,
+          uploadedThumbnail.Location
+        );
       }
-    });
+
+      const message: MessageById = await this.getMessageById(messageId);
+      const postedMessage: PostedMessage = {
+        subjectId: message.subjectId,
+        messageId: message.messageId,
+        message: message.message,
+        isAttachment: message.isAttachment,
+        createdBy: message.createdBy,
+        createdAt: message.createdAt,
+        viewed: message.viewed,
+        error: null,
+        attachments: message.attachments
+      };
+
+      return postedMessage;
+    } catch (error) {
+      this.errorHandler.throwCustomError('Unable to upload attachment.');
+    }
   }
 
   // Uploads file to S3 cloud bucket.
@@ -323,13 +307,17 @@ export class AttachmentsService {
     buffer: Buffer,
     uuid: string
   ): Promise<any> {
-    const params: S3.PutObjectRequest = {
-      Bucket: process.env.AWS_S3_BUCKET_NAME,
-      Key: `${process.env.AWS_S3_THUMBNAIL_FOLDER}/${uuid}`,
-      Body: buffer
-    };
-    const uploadResult = await this.s3.upload(params).promise();
-    return uploadResult;
+    try {
+      const params: S3.PutObjectRequest = {
+        Bucket: process.env.AWS_S3_BUCKET_NAME,
+        Key: `${process.env.AWS_S3_THUMBNAIL_FOLDER}/${uuid}`,
+        Body: buffer
+      };
+      const uploadResult = await this.s3.upload(params).promise();
+      return uploadResult;
+    } catch (error) {
+      console.log(error);
+    }
   }
 
   // Saves thumbnail details in DB.

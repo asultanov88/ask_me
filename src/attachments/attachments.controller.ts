@@ -4,10 +4,10 @@ import {
   Get,
   Post,
   Query,
-  UploadedFiles,
+  UploadedFile,
   UseInterceptors
 } from '@nestjs/common';
-import { FilesInterceptor } from '@nestjs/platform-express';
+import { FileInterceptor } from '@nestjs/platform-express';
 import { AttachmentsService } from './attachments.service';
 import { AttachmentUrl } from './model/result';
 
@@ -16,14 +16,23 @@ export class AttachmentsController {
   public constructor(private readonly attachmentsService: AttachmentsService) {}
 
   @Post('upload')
-  @UseInterceptors(FilesInterceptor('files', 100))
-  async uploadMultipleFiles(
-    @UploadedFiles() files,
-    @Body() body
-  ): Promise<any> {
+  @UseInterceptors(FileInterceptor('file'))
+  async uploadFile(@UploadedFile() file, @Body() body): Promise<any> {
     // Message object is in string format.
     const messageId: number = parseInt(body.messageId, 10);
-    return await this.attachmentsService.uploadMultipleFiles(files, messageId);
+    let thumbnailBlob: Blob = null;
+    const thumbnailString: string =
+      body.thumbnailBlob?.toString()?.trim().length > 0
+        ? body.thumbnailBlob
+        : null;
+    if (thumbnailString) {
+      thumbnailBlob = new Blob([thumbnailString]);
+    }
+    return await this.attachmentsService.uploadMultipleFiles(
+      file,
+      messageId,
+      thumbnailBlob
+    );
   }
 
   @Get('attachment-url')
