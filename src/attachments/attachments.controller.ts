@@ -20,15 +20,12 @@ export class AttachmentsController {
   async uploadFile(@UploadedFile() file, @Body() body): Promise<any> {
     // Message object is in string format.
     const messageId: number = parseInt(body.messageId, 10);
-    let thumbnailBlob: Blob = null;
-    const thumbnailString: string =
+    const thumbnailBlob: string =
       body.thumbnailBlob?.toString()?.trim().length > 0
         ? body.thumbnailBlob
         : null;
-    if (thumbnailString) {
-      thumbnailBlob = new Blob([thumbnailString]);
-    }
-    return await this.attachmentsService.uploadMultipleFiles(
+
+    return await this.attachmentsService.uploadFile(
       file,
       messageId,
       thumbnailBlob

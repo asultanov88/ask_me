@@ -172,10 +172,10 @@ export class AttachmentsService {
   }
 
   // Uploads multiple files as attachments.
-  public async uploadMultipleFiles(
+  public async uploadFile(
     file: Express.Multer.File,
     messageId: number,
-    thumbnailBlob: Blob
+    thumbnailBlob: string
   ): Promise<any> {
     if (!messageId || isNaN(messageId)) {
       this.errorHandler.throwCustomError('message is not provided or invalid.');
@@ -225,9 +225,14 @@ export class AttachmentsService {
         }
       } else {
         const thumbnailUuid = uuid();
+        // Decrypt blob.
+        const bufferObj = Buffer.from(
+          thumbnailBlob.replaceAll('data:image/png;base64,', ''),
+          'base64'
+        );
 
         const uploadedThumbnail = await this.uploadThumbnailToCloud(
-          Buffer.from(await thumbnailBlob.arrayBuffer()),
+          bufferObj,
           `${thumbnailUuid}-${file.originalname}`
         );
 
@@ -307,17 +312,13 @@ export class AttachmentsService {
     buffer: Buffer,
     uuid: string
   ): Promise<any> {
-    try {
-      const params: S3.PutObjectRequest = {
-        Bucket: process.env.AWS_S3_BUCKET_NAME,
-        Key: `${process.env.AWS_S3_THUMBNAIL_FOLDER}/${uuid}`,
-        Body: buffer
-      };
-      const uploadResult = await this.s3.upload(params).promise();
-      return uploadResult;
-    } catch (error) {
-      console.log(error);
-    }
+    const params: S3.PutObjectRequest = {
+      Bucket: process.env.AWS_S3_BUCKET_NAME,
+      Key: `${process.env.AWS_S3_THUMBNAIL_FOLDER}/${uuid}`,
+      Body: buffer
+    };
+    const uploadResult = await this.s3.upload(params).promise();
+    return uploadResult;
   }
 
   // Saves thumbnail details in DB.
