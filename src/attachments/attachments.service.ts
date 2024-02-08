@@ -289,12 +289,16 @@ export class AttachmentsService {
     bucket: string,
     key: string
   ): Promise<string> {
-    const params = {
-      Bucket: bucket,
-      Key: key,
-      Expires: 600 // Expires in 600 seconds after creation.
-    };
-    const uploadResult = this.s3.getSignedUrl('getObject', params);
+    let uploadResult = null;
+    if (bucket && key) {
+      const params = {
+        Bucket: bucket,
+        Key: key,
+        Expires: 600 // Expires in 600 seconds after creation.
+      };
+      uploadResult = this.s3.getSignedUrl('getObject', params);
+    }
+
     return uploadResult;
   }
 
