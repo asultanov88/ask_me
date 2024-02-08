@@ -180,6 +180,11 @@ export class AttachmentsService {
     if (!messageId || isNaN(messageId)) {
       this.errorHandler.throwCustomError('message is not provided or invalid.');
     }
+
+    const thumbnailExtension = '.jpg';
+    const thumbnailName =
+      file.originalname.replace(/\.[^/.]+$/, '') + thumbnailExtension;
+
     // Required to access THIS object within promise.
     try {
       // Upload file to cloud.
@@ -206,12 +211,12 @@ export class AttachmentsService {
         if (fileMimeType.includes('image')) {
           const thumbnailUuid = uuid();
           const thumbnailBuffer = await sharp(file.buffer)
-            .resize(200, 200)
+            .resize(100, 100)
             .toBuffer();
           // Upload thumbnail to cloud.
           const uploadedThumbnail = await this.uploadThumbnailToCloud(
             thumbnailBuffer,
-            `${thumbnailUuid}-${file.originalname}`
+            `${thumbnailUuid}-${thumbnailName}`
           );
 
           await this.saveThumbnailDetails(
@@ -233,7 +238,7 @@ export class AttachmentsService {
 
         const uploadedThumbnail = await this.uploadThumbnailToCloud(
           bufferObj,
-          `${thumbnailUuid}-${file.originalname}`
+          `${thumbnailUuid}-${thumbnailName}`
         );
 
         await this.saveThumbnailDetails(
