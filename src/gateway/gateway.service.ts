@@ -97,8 +97,7 @@ export class GatewayService {
         attachments: [],
         replyToMessage: {
           replyToMessageId: resultObj.replyToMessageId,
-          replyToMessage: resultObj.replyToMessage,
-          replyDateTime: resultObj.replyDateTime
+          replyToMessage: resultObj.replyToMessage
         }
       };
       return postedMessage;
@@ -115,8 +114,7 @@ export class GatewayService {
         attachments: [],
         replyToMessage: {
           replyToMessageId: null,
-          replyToMessage: null,
-          replyDateTime: null
+          replyToMessage: null
         }
       };
 

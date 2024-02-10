@@ -24,7 +24,6 @@ export interface PostedMessage extends Message {
 export interface ReplyToMessage {
   replyToMessageId: number;
   replyToMessage: string;
-  replyDateTime: string;
 }
 
 export interface ViewedMessage {

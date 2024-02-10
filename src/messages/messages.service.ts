@@ -89,8 +89,7 @@ export class MessagesService {
         attachments: [],
         replyToMessage: {
           replyToMessageId: resultObj.replyToMessageId,
-          replyToMessage: resultObj.replyToMessage,
-          replyDateTime: resultObj.replyDateTime
+          replyToMessage: resultObj.replyToMessage
         }
       };
       return postedMessage;
@@ -198,8 +197,7 @@ export class MessagesService {
           attachments: [],
           replyToMessage: {
             replyToMessageId: m.replyToMessageId,
-            replyToMessage: m.replyToMessage,
-            replyDateTime: m.replyDateTime
+            replyToMessage: m.replyToMessage
           }
         };
         subjectMessages.push(message);

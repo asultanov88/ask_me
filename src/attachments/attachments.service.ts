@@ -433,8 +433,7 @@ export class AttachmentsService {
         subjectId: messageRaw.subjectId,
         replyToMessage: {
           replyToMessageId: messageRaw.replyToMessageId,
-          replyToMessage: messageRaw.replyToMessage,
-          replyDateTime: messageRaw.replyDateTime
+          replyToMessage: messageRaw.replyToMessage
         },
         messageId: messageRaw.messageId,
         message: messageRaw.message,
