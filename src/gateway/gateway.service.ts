@@ -65,6 +65,10 @@ export class GatewayService {
         parameterValue: this.mssql.convertToString(newMessage.subjectId)
       },
       {
+        inputParamName: 'ReplyToMessageId',
+        parameterValue: this.mssql.convertToString(newMessage.replyToMessageId)
+      },
+      {
         inputParamName: 'Message',
         tableType: TableTypes.MessageTableType,
         bulkParamValue: [messageDto]
@@ -90,7 +94,12 @@ export class GatewayService {
         createdAt: resultObj.createdAt,
         viewed: resultObj.viewed,
         error: null,
-        attachments: []
+        attachments: [],
+        replyToMessage: {
+          replyToMessageId: resultObj.replyToMessageId,
+          replyToMessage: resultObj.replyToMessage,
+          replyDateTime: resultObj.replyDateTime
+        }
       };
       return postedMessage;
     } catch (error) {
@@ -103,7 +112,12 @@ export class GatewayService {
         createdBy: null,
         createdAt: null,
         viewed: false,
-        attachments: []
+        attachments: [],
+        replyToMessage: {
+          replyToMessageId: null,
+          replyToMessage: null,
+          replyDateTime: null
+        }
       };
 
       return postedMessage;

@@ -2,6 +2,7 @@ import {
   AttachmentThumbnailResult,
   ThumbnailObject
 } from 'src/attachments/model/result';
+import { ReplyToMessage } from 'src/gateway/dto';
 
 export interface ClientProviderMessage {
   subjectId: number;
@@ -29,6 +30,7 @@ export interface Message {
   createdAt: string;
   viewed: boolean;
   attachments: Attachment[];
+  replyToMessage: ReplyToMessage;
 }
 
 export interface MessageViewed {

@@ -3,6 +3,7 @@ import { Message } from 'src/messages/model/result/result';
 
 export interface SocketMessageDto {
   subjectId: number;
+  replyToMessageId: number;
   message: string;
   isAttachment: boolean;
   toUserId: number;
@@ -18,6 +19,12 @@ export interface OutgoingAttachmentMessageDto {
 export interface PostedMessage extends Message {
   subjectId: number;
   error: string;
+}
+
+export interface ReplyToMessage {
+  replyToMessageId: number;
+  replyToMessage: string;
+  replyDateTime: string;
 }
 
 export interface ViewedMessage {

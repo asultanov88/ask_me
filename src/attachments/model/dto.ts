@@ -1,5 +1,6 @@
 export interface AttachmentMessageDto {
   subjectId: number;
+  replyToMessageId: number;
   message: string;
   isAttachment: boolean;
   toUserId: number;

@@ -261,7 +261,8 @@ export class AttachmentsService {
         createdAt: message.createdAt,
         viewed: message.viewed,
         error: null,
-        attachments: message.attachments
+        attachments: message.attachments,
+        replyToMessage: message.replyToMessage
       };
 
       return postedMessage;
@@ -427,8 +428,22 @@ export class AttachmentsService {
 
     try {
       const resultSet = await this.database.query(dbQuery);
-      const message = this.mssql.parseSingleResultSet(resultSet) as MessageById;
-      message.attachments = [];
+      const messageRaw = this.mssql.parseSingleResultSet(resultSet);
+      const message: MessageById = {
+        subjectId: messageRaw.subjectId,
+        replyToMessage: {
+          replyToMessageId: messageRaw.replyToMessageId,
+          replyToMessage: messageRaw.replyToMessage,
+          replyDateTime: messageRaw.replyDateTime
+        },
+        messageId: messageRaw.messageId,
+        message: messageRaw.message,
+        isAttachment: messageRaw.isAttachment,
+        createdBy: messageRaw.createdBy,
+        createdAt: messageRaw.createdAt,
+        viewed: messageRaw.viewed,
+        attachments: []
+      };
 
       // Get message atatachments.
       const messageAttachmentArr: MessageAttachmentWithThumbnailResult[] =

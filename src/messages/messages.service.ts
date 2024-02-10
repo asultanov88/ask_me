@@ -60,6 +60,12 @@ export class MessagesService {
       {
         inputParamName: 'SubjectId',
         parameterValue: this.mssql.convertToString(attachmentMessage.subjectId)
+      },
+      {
+        inputParamName: 'ReplyToMessageId',
+        parameterValue: this.mssql.convertToString(
+          attachmentMessage.replyToMessageId
+        )
       }
     ];
 
@@ -80,7 +86,12 @@ export class MessagesService {
         createdAt: resultObj.createdAt,
         viewed: resultObj.viewed,
         error: null,
-        attachments: []
+        attachments: [],
+        replyToMessage: {
+          replyToMessageId: resultObj.replyToMessageId,
+          replyToMessage: resultObj.replyToMessage,
+          replyDateTime: resultObj.replyDateTime
+        }
       };
       return postedMessage;
     } catch (error) {
@@ -173,9 +184,26 @@ export class MessagesService {
 
     try {
       const resultSet = await this.database.query(dbQuery);
-      const subjectMessages = this.mssql.parseMultiResultSet(
-        resultSet
-      ) as Message[];
+      const subjectMessagesRaw = this.mssql.parseMultiResultSet(resultSet);
+
+      const subjectMessages: Message[] = [];
+      subjectMessagesRaw.forEach((m) => {
+        const message: Message = {
+          messageId: m.messageId,
+          message: m.message,
+          isAttachment: m.isAttachment,
+          createdBy: m.createdBy,
+          createdAt: m.createdAt,
+          viewed: m.viewed,
+          attachments: [],
+          replyToMessage: {
+            replyToMessageId: m.replyToMessageId,
+            replyToMessage: m.replyToMessage,
+            replyDateTime: m.replyDateTime
+          }
+        };
+        subjectMessages.push(message);
+      });
 
       // Get message atatachments.
       const messageIdsArr: number[] = subjectMessages.map((m) => m.messageId);
