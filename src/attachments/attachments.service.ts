@@ -211,7 +211,10 @@ export class AttachmentsService {
         if (fileMimeType.includes('image')) {
           const thumbnailUuid = uuid();
           const thumbnailBuffer = await sharp(file.buffer)
-            .resize(100, 100)
+            .resize(200, 200, {
+              fit: 'inside'
+            })
+            .jpeg({ quality: 80 })
             .toBuffer();
           // Upload thumbnail to cloud.
           const uploadedThumbnail = await this.uploadThumbnailToCloud(
