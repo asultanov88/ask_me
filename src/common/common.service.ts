@@ -65,6 +65,7 @@ export class CommonService {
         isAttachment: messageRaw.isAttachment,
         createdBy: messageRaw.createdBy,
         createdAt: messageRaw.createdAt,
+        lastUpdatedAt: messageRaw.lastUpdatedAt,
         viewed: messageRaw.viewed,
         attachments: []
       };

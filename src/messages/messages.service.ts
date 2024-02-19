@@ -47,6 +47,7 @@ export class MessagesService {
       isAttachment: true,
       createdBy: this.request['user'].userId,
       createdAt: null,
+      lastUpdatedAt: null,
       viewed: false
     };
 
@@ -83,6 +84,7 @@ export class MessagesService {
         isAttachment: resultObj.isAttachment,
         createdBy: resultObj.createdBy,
         createdAt: resultObj.createdAt,
+        lastUpdatedAt: resultObj.lastUpdatedAt,
         viewed: resultObj.viewed,
         error: null,
         attachments: [],
@@ -198,6 +200,7 @@ export class MessagesService {
           isAttachment: m.isAttachment,
           createdBy: m.createdBy,
           createdAt: m.createdAt,
+          lastUpdatedAt: m.lastUpdatedAt,
           viewed: m.viewed,
           attachments: [],
           replyToMessage: {

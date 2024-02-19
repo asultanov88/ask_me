@@ -58,6 +58,7 @@ export class GatewayService {
       isAttachment: newMessage.isAttachment ?? false,
       createdBy: newMessage.user.userId,
       createdAt: null,
+      lastUpdatedAt: null,
       viewed: false
     };
 
@@ -94,6 +95,7 @@ export class GatewayService {
         isAttachment: resultObj.isAttachment,
         createdBy: resultObj.createdBy,
         createdAt: resultObj.createdAt,
+        lastUpdatedAt: resultObj.lastUpdatedAt,
         viewed: resultObj.viewed,
         error: null,
         attachments: [],
@@ -118,6 +120,7 @@ export class GatewayService {
         isAttachment: false,
         createdBy: null,
         createdAt: null,
+        lastUpdatedAt: null,
         viewed: false,
         attachments: [],
         replyToMessage: {

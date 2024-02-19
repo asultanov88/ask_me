@@ -14,6 +14,8 @@ export class MessageDto {
   createdAt: string;
 
   viewed: boolean;
+
+  lastUpdatedAt: string;
 }
 
 export class NewMessage {

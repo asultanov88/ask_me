@@ -71,6 +71,7 @@ export class TableTypes {
       'isAttachment',
       'createdBy',
       'createdAt',
+      'lastUpdatedAt',
       'viewed'
     ],
     dto: new MessageDto()

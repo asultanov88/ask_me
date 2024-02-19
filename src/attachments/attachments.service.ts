@@ -187,6 +187,7 @@ export class AttachmentsService {
         isAttachment: message.isAttachment,
         createdBy: message.createdBy,
         createdAt: message.createdAt,
+        lastUpdatedAt: message.lastUpdatedAt,
         viewed: message.viewed,
         error: null,
         attachments: message.attachments,

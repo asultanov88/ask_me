@@ -28,6 +28,7 @@ export interface Message {
   isAttachment: boolean;
   createdBy: number;
   createdAt: string;
+  lastUpdatedAt: string;
   viewed: boolean;
   attachments: Attachment[];
   replyToMessage: ReplyToMessage;
