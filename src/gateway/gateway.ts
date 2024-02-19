@@ -16,6 +16,8 @@ import { AuthGuard } from 'src/auth/auth.guard';
 import {
   OutgoingAttachmentMessageDto,
   SocketMessageDto,
+  UpdateMessageDto,
+  UpdatedMessage,
   ViewedMessage
 } from './dto';
 import { GatewayService } from './gateway.service';
@@ -96,6 +98,18 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
     }
   }
 
+  @UseGuards(AuthGuard)
+  @SubscribeMessage('updateMessage')
+  async onUpdateMessage(@MessageBody() body: UpdateMessageDto) {
+    let updatedMessage: UpdatedMessage =
+      await this.gatewayService.updateMessage(body);
+    // Emit message to the receiver.
+    this.gatewayService.emitMessageToBothParties(
+      updatedMessage.clientUserId,
+      updatedMessage.providerUserId,
+      updatedMessage.postedMessage
+    );
+  }
   @UseGuards(AuthGuard)
   @SubscribeMessage('outgoingMessage')
   async onOutgoingMessage(@MessageBody() body: SocketMessageDto) {

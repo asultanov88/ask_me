@@ -1,6 +1,11 @@
 import { AuthorisedUser } from 'src/auth/models/dto';
 import { Message } from 'src/messages/model/result/result';
 
+export interface UpdateMessageDto {
+  messageId: number;
+  message: string;
+}
+
 export interface SocketMessageDto {
   subjectId: number;
   replyToMessageId: number;
@@ -14,6 +19,12 @@ export interface SocketMessageDto {
 export interface OutgoingAttachmentMessageDto {
   toUserId: number;
   message: PostedMessage;
+}
+
+export interface UpdatedMessage {
+  clientUserId: number;
+  providerUserId: number;
+  postedMessage: PostedMessage;
 }
 
 export interface PostedMessage extends Message {
@@ -32,4 +43,9 @@ export interface ReplyToMessage {
 export interface ViewedMessage {
   accessToken: string;
   messageId: number;
+}
+
+export interface MessageRecipients {
+  clientUserId: number;
+  providerUserId: number;
 }
