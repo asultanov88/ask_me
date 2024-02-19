@@ -1,16 +1,15 @@
 import { Module } from '@nestjs/common';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
-import { CommonService } from 'src/common/common.service';
 import { DatabaseEntity } from 'src/database/entities/database';
 import { MsSql } from 'src/database/typeorm/mssql';
-import { MessagesController } from './messages.controller';
-import { MessagesService } from './messages.service';
+import { MessagesController } from 'src/messages/messages.controller';
+import { CommonService } from './common.service';
 
 @Module({
   imports: [TypeOrmModule.forFeature([DatabaseEntity])],
   controllers: [MessagesController],
-  providers: [MsSql, ErrorHandler, MessagesService, CommonService],
-  exports: [MessagesService]
+  providers: [MsSql, ErrorHandler, CommonService],
+  exports: [CommonService]
 })
-export class MessagesModule {}
+export class CommonModule {}

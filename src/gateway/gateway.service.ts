@@ -10,6 +10,7 @@ import { MessageDto } from 'src/messages/model/dto/dto';
 import { TableTypes } from 'src/database/table-types/table-types';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { MessageViewed } from 'src/messages/model/result/result';
+import { CommonService } from 'src/common/common.service';
 
 @Injectable()
 export class GatewayService {
@@ -17,7 +18,8 @@ export class GatewayService {
     @InjectRepository(DatabaseEntity)
     private database: Repository<null>,
     private mssql: MsSql,
-    private errorHandler: ErrorHandler
+    private errorHandler: ErrorHandler,
+    private commonService: CommonService
   ) {}
   // Maps socketId with socket instances.
   public readonly connectedClients: Map<string, Socket> = new Map();
@@ -97,7 +99,13 @@ export class GatewayService {
         attachments: [],
         replyToMessage: {
           replyToMessageId: resultObj.replyToMessageId,
-          replyToMessage: resultObj.replyToMessage
+          replyToMessage: resultObj.replyToMessage,
+          originalMessageCreatedBy: resultObj.originalMessageCreatedBy,
+          thumbnailUrl: this.commonService.getSignedUrl(
+            resultObj.thumbnailS3Bucket,
+            resultObj.thumbnailS3Key
+          ),
+          attachmentOriginalName: resultObj.attachmentOriginalName
         }
       };
       return postedMessage;
@@ -114,7 +122,10 @@ export class GatewayService {
         attachments: [],
         replyToMessage: {
           replyToMessageId: null,
-          replyToMessage: null
+          replyToMessage: null,
+          originalMessageCreatedBy: null,
+          thumbnailUrl: null,
+          attachmentOriginalName: null
         }
       };
 

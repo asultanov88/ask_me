@@ -2,12 +2,12 @@ import { Body, Inject, Injectable } from '@nestjs/common';
 import { REQUEST } from '@nestjs/core';
 import { InjectRepository } from '@nestjs/typeorm';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
-import { AttachmentsService } from 'src/attachments/attachments.service';
 import { AttachmentMessageDto } from 'src/attachments/model/dto';
 import {
   MessageAttachmentWithThumbnailResult,
   ThumbnailObject
 } from 'src/attachments/model/result';
+import { CommonService } from 'src/common/common.service';
 import { DatabaseEntity } from 'src/database/entities/database';
 import { TableTypes } from 'src/database/table-types/table-types';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
@@ -18,8 +18,7 @@ import { MessageDto, SubjectDto } from './model/dto/dto';
 import {
   Attachment,
   ClientProviderMessage,
-  Message,
-  MessageById
+  Message
 } from './model/result/result';
 
 @Injectable()
@@ -29,7 +28,7 @@ export class MessagesService {
     private database: Repository<null>,
     private mssql: MsSql,
     private errorHandler: ErrorHandler,
-    private attachmentsService: AttachmentsService,
+    private commonService: CommonService,
     @Inject(REQUEST) private readonly request: Request
   ) {}
 
@@ -89,7 +88,13 @@ export class MessagesService {
         attachments: [],
         replyToMessage: {
           replyToMessageId: resultObj.replyToMessageId,
-          replyToMessage: resultObj.replyToMessage
+          replyToMessage: resultObj.replyToMessage,
+          originalMessageCreatedBy: resultObj.originalMessageCreatedBy,
+          thumbnailUrl: this.commonService.getSignedUrl(
+            resultObj.thumbnailS3Bucket,
+            resultObj.thumbnailS3Key
+          ),
+          attachmentOriginalName: resultObj.attachmentOriginalName
         }
       };
       return postedMessage;
@@ -197,16 +202,23 @@ export class MessagesService {
           attachments: [],
           replyToMessage: {
             replyToMessageId: m.replyToMessageId,
-            replyToMessage: m.replyToMessage
+            replyToMessage: m.replyToMessage,
+            originalMessageCreatedBy: m.originalMessageCreatedBy,
+            thumbnailUrl: this.commonService.getSignedUrl(
+              m.thumbnailS3Bucket,
+              m.thumbnailS3Key
+            ),
+            attachmentOriginalName: m.attachmentOriginalName
           }
         };
+
         subjectMessages.push(message);
       });
 
       // Get message atatachments.
       const messageIdsArr: number[] = subjectMessages.map((m) => m.messageId);
       const messageAttachmentsArr: MessageAttachmentWithThumbnailResult[] =
-        await this.attachmentsService.getMessageAttachments(messageIdsArr);
+        await this.commonService.getMessageAttachments(messageIdsArr);
 
       subjectMessages.forEach((sm) => {
         const relatedAttachments = messageAttachmentsArr.filter(
@@ -236,7 +248,7 @@ export class MessagesService {
       });
 
       const allThumbnails: ThumbnailObject[] =
-        await this.attachmentsService.getThumbnails(allThumbnailIdsArr);
+        await this.commonService.getThumbnails(allThumbnailIdsArr);
 
       subjectMessages.forEach((sm) => {
         sm.attachments.forEach((attachment) => {

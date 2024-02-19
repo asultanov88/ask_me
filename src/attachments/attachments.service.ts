@@ -4,23 +4,20 @@ import { InjectRepository } from '@nestjs/typeorm';
 import { S3 } from 'aws-sdk';
 import * as sharp from 'sharp';
 import { ErrorHandler } from 'src/Helper/ErrorHandler';
+import { CommonService } from 'src/common/common.service';
 import { DatabaseEntity } from 'src/database/entities/database';
-import { PkDto } from 'src/database/table-types/shared-dto';
 import { TableTypes } from 'src/database/table-types/table-types';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { MsSql } from 'src/database/typeorm/mssql';
 import { PostedMessage } from 'src/gateway/dto';
-import { MessagesService } from 'src/messages/messages.service';
-import { Attachment, MessageById } from 'src/messages/model/result/result';
+import { MessageById } from 'src/messages/model/result/result';
 import { Repository } from 'typeorm';
 import { v4 as uuid } from 'uuid';
 import { AttachmentThumbnailDto, MessageAttachmentDto } from './model/dto';
 import {
   AttachmentThumbnailResult,
   AttachmentUrl,
-  MessageAttachmentResult,
-  MessageAttachmentWithThumbnailResult,
-  ThumbnailObject
+  MessageAttachmentResult
 } from './model/result';
 
 @Injectable()
@@ -30,6 +27,7 @@ export class AttachmentsService {
     private database: Repository<null>,
     private mssql: MsSql,
     private errorHandler: ErrorHandler,
+    private commonService: CommonService,
     @Inject(REQUEST) private readonly request: Request
   ) {}
 
@@ -86,7 +84,7 @@ export class AttachmentsService {
 
     if (messageAttachment) {
       const attachmentUrl: AttachmentUrl = {
-        attachmentUrl: await this.readAttachmentFromCloud(
+        attachmentUrl: this.commonService.getSignedUrl(
           messageAttachment.s3Bucket,
           messageAttachment.s3Key
         )
@@ -95,80 +93,6 @@ export class AttachmentsService {
     } else {
       this.errorHandler.throwCustomError('Attachment not found.');
     }
-  }
-
-  // Gets message attachments by messageId array.
-  public async getMessageAttachments(
-    messageIdsArr: number[]
-  ): Promise<MessageAttachmentWithThumbnailResult[]> {
-    const messageIdPkDto: PkDto[] = [];
-    messageIdsArr.forEach((messageId) => {
-      messageIdPkDto.push({
-        pk: messageId
-      });
-    });
-    const databaseParams: DatabaseParam[] = [
-      {
-        tableType: TableTypes.PkTableType,
-        inputParamName: 'MessageIds',
-        bulkParamValue: messageIdPkDto
-      }
-    ];
-    const dbQuery: string = this.mssql.getQuery(
-      databaseParams,
-      'UspGetMessageAttachments'
-    );
-    try {
-      const resultSet = await this.database.query(dbQuery);
-      const resultObj = this.mssql.parseMultiResultSet(
-        resultSet
-      ) as MessageAttachmentWithThumbnailResult[];
-      return resultObj ? resultObj : [];
-    } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
-    }
-  }
-
-  // Gets thumbnail objects.
-  public async getThumbnails(
-    thumbnailIdArr: number[]
-  ): Promise<ThumbnailObject[]> {
-    const pkDto: PkDto[] = [];
-    thumbnailIdArr.forEach((id) => {
-      pkDto.push({ pk: id });
-    });
-    const databaseParams: DatabaseParam[] = [
-      {
-        tableType: TableTypes.PkTableType,
-        inputParamName: 'AttachmentThumbnailIds',
-        bulkParamValue: pkDto
-      }
-    ];
-
-    const dbQuery: string = this.mssql.getQuery(
-      databaseParams,
-      'UspGetThumbnails'
-    );
-
-    const resultSet = await this.database.query(dbQuery);
-    const resultObjArr = this.mssql.parseMultiResultSet(
-      resultSet
-    ) as AttachmentThumbnailResult[];
-
-    const resultArray = [];
-    // Get thumbnail object for each item in array.
-    resultObjArr.forEach((thumbnail) => {
-      const thumbnailObj = this.readThumbnailFromCloud(
-        thumbnail.s3Bucket,
-        thumbnail.s3Key
-      ).then((result) => {
-        const thumbnailResult: ThumbnailObject = thumbnail;
-        thumbnailResult.thumbnailUrl = result;
-        resultArray.push(thumbnailResult);
-      });
-    });
-
-    return resultArray;
   }
 
   // Uploads multiple files as attachments.
@@ -254,7 +178,8 @@ export class AttachmentsService {
         );
       }
 
-      const message: MessageById = await this.getMessageById(messageId);
+      const message: MessageById =
+        await this.commonService.getMessageById(messageId);
       const postedMessage: PostedMessage = {
         subjectId: message.subjectId,
         messageId: message.messageId,
@@ -285,38 +210,6 @@ export class AttachmentsService {
       Body: file.buffer
     };
     const uploadResult = await this.s3.upload(params).promise();
-    return uploadResult;
-  }
-
-  // Reads thumbnail from S3 cloud bucket.
-  public async readThumbnailFromCloud(
-    bucket: string,
-    key: string
-  ): Promise<string> {
-    let uploadResult = null;
-    if (bucket && key) {
-      const params = {
-        Bucket: bucket,
-        Key: key,
-        Expires: 600 // Expires in 600 seconds after creation.
-      };
-      uploadResult = this.s3.getSignedUrl('getObject', params);
-    }
-
-    return uploadResult;
-  }
-
-  // Reads attachment from S3 cloud bucket.
-  public async readAttachmentFromCloud(
-    bucket: string,
-    key: string
-  ): Promise<string> {
-    const params = {
-      Bucket: bucket,
-      Key: key,
-      Expires: 600 // Expires in 600 seconds after creation.
-    };
-    const uploadResult = this.s3.getSignedUrl('getObject', params);
     return uploadResult;
   }
 
@@ -413,74 +306,5 @@ export class AttachmentsService {
     ) as MessageAttachmentResult;
 
     return resultObj;
-  }
-
-  // Gets a single message with messageId.
-  private async getMessageById(messageId: number): Promise<MessageById> {
-    const databaseParams: DatabaseParam[] = [
-      {
-        inputParamName: 'MessageId',
-        parameterValue: this.mssql.convertToString(messageId)
-      }
-    ];
-
-    const dbQuery: string = this.mssql.getQuery(
-      databaseParams,
-      'UspGetMessageById'
-    );
-
-    try {
-      const resultSet = await this.database.query(dbQuery);
-      const messageRaw = this.mssql.parseSingleResultSet(resultSet);
-      const message: MessageById = {
-        subjectId: messageRaw.subjectId,
-        replyToMessage: {
-          replyToMessageId: messageRaw.replyToMessageId,
-          replyToMessage: messageRaw.replyToMessage
-        },
-        messageId: messageRaw.messageId,
-        message: messageRaw.message,
-        isAttachment: messageRaw.isAttachment,
-        createdBy: messageRaw.createdBy,
-        createdAt: messageRaw.createdAt,
-        viewed: messageRaw.viewed,
-        attachments: []
-      };
-
-      // Get message atatachments.
-      const messageAttachmentArr: MessageAttachmentWithThumbnailResult[] =
-        await this.getMessageAttachments([messageId]);
-
-      messageAttachmentArr.forEach((ma) => {
-        const attachment: Attachment = {
-          attachmentOriginalName: ma.originalName,
-          attachmentMimeType: ma.mimeType,
-          attachmentThumbnailId: ma.attachmentThumbnailId,
-          messageAttachmentId: ma.messageAttachmentId,
-          thumbnailUrl: null
-        };
-        message.attachments.push(attachment);
-      });
-
-      // Get attachment thumbnails.
-      const messageThumbnaildIdArr: number[] = message.attachments
-        .filter((attachment) => attachment.attachmentThumbnailId)
-        .map((attachment) => attachment.attachmentThumbnailId);
-
-      const allThumbnails: ThumbnailObject[] = await this.getThumbnails(
-        messageThumbnaildIdArr
-      );
-
-      message.attachments.forEach((attachment) => {
-        attachment.thumbnailUrl =
-          allThumbnails.find(
-            (t) => t.attachmentThumbnailId === attachment.attachmentThumbnailId
-          )?.thumbnailUrl ?? null;
-      });
-
-      return message;
-    } catch (error) {
-      this.errorHandler.throwCustomError(error);
-    }
   }
 }

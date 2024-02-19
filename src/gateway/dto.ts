@@ -24,6 +24,9 @@ export interface PostedMessage extends Message {
 export interface ReplyToMessage {
   replyToMessageId: number;
   replyToMessage: string;
+  originalMessageCreatedBy: number;
+  thumbnailUrl: string;
+  attachmentOriginalName: string;
 }
 
 export interface ViewedMessage {
