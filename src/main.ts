@@ -11,7 +11,7 @@ async function bootstrap() {
   app.setGlobalPrefix('api');
   await app.listen(process.env.PORT);
   app.useGlobalPipes(new ValidationPipe({ whitelist: true, transform: true }));
-  console.log('Listening on port:' + process.env.PORT || 8080);
+  console.log('Listening on port:' + process.env.PORT);
 
   if (module.hot) {
     module.hot.accept();
