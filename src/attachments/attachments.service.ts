@@ -191,7 +191,10 @@ export class AttachmentsService {
         viewed: message.viewed,
         error: null,
         attachments: message.attachments,
-        replyToMessage: message.replyToMessage
+        replyToMessage: message.replyToMessage,
+        messageHistory: await this.commonService.getMessageHistory([
+          message.messageId
+        ])
       };
 
       return postedMessage;

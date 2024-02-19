@@ -12,6 +12,7 @@ import { PkDto } from 'src/database/table-types/shared-dto';
 import { TableTypes } from 'src/database/table-types/table-types';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { MsSql } from 'src/database/typeorm/mssql';
+import { MessageHistory } from 'src/gateway/dto';
 import { Attachment, MessageById } from 'src/messages/model/result/result';
 import { Repository } from 'typeorm';
 
@@ -67,7 +68,8 @@ export class CommonService {
         createdAt: messageRaw.createdAt,
         lastUpdatedAt: messageRaw.lastUpdatedAt,
         viewed: messageRaw.viewed,
-        attachments: []
+        attachments: [],
+        messageHistory: await this.getMessageHistory([messageRaw.messageId])
       };
 
       // Get message atatachments.
@@ -192,5 +194,41 @@ export class CommonService {
     }
 
     return signedUrl;
+  }
+
+  // Gets message history.
+  public async getMessageHistory(
+    messageIds: number[]
+  ): Promise<MessageHistory[]> {
+    const pkMessageId: PkDto[] = [];
+    if (messageIds?.length > 0) {
+      messageIds.forEach((id) => {
+        if (id) {
+          pkMessageId.push({
+            pk: id
+          });
+        }
+      });
+    }
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'MessageIds',
+        bulkParamValue: pkMessageId,
+        tableType: TableTypes.PkTableType
+      }
+    ];
+
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspGetMessageHistory'
+    );
+
+    const resultSet = await this.database.query(dbQuery);
+    const messageHistoryArr = this.mssql.parseMultiResultSet(
+      resultSet
+    ) as MessageHistory[];
+
+    return messageHistoryArr;
   }
 }

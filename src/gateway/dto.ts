@@ -40,6 +40,13 @@ export interface ReplyToMessage {
   attachmentOriginalName: string;
 }
 
+export interface MessageHistory {
+  messageHistoryId: number;
+  messageId: number;
+  message: string;
+  createdAt: string;
+}
+
 export interface ViewedMessage {
   accessToken: string;
   messageId: number;

@@ -73,7 +73,10 @@ export class GatewayService {
       viewed: message.viewed,
       error: null,
       attachments: message.attachments,
-      replyToMessage: message.replyToMessage
+      replyToMessage: message.replyToMessage,
+      messageHistory: await this.commonService.getMessageHistory([
+        message.messageId
+      ])
     };
 
     const updatedMessage: UpdatedMessage = {
@@ -166,7 +169,10 @@ export class GatewayService {
             resultObj.thumbnailS3Key
           ),
           attachmentOriginalName: resultObj.attachmentOriginalName
-        }
+        },
+        messageHistory: await this.commonService.getMessageHistory([
+          resultObj.messageId
+        ])
       };
       return postedMessage;
     } catch (error) {
@@ -187,7 +193,8 @@ export class GatewayService {
           originalMessageCreatedBy: null,
           thumbnailUrl: null,
           attachmentOriginalName: null
-        }
+        },
+        messageHistory: []
       };
 
       return postedMessage;

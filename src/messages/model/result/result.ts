@@ -1,8 +1,4 @@
-import {
-  AttachmentThumbnailResult,
-  ThumbnailObject
-} from 'src/attachments/model/result';
-import { ReplyToMessage } from 'src/gateway/dto';
+import { MessageHistory, ReplyToMessage } from 'src/gateway/dto';
 
 export interface ClientProviderMessage {
   subjectId: number;
@@ -32,6 +28,7 @@ export interface Message {
   viewed: boolean;
   attachments: Attachment[];
   replyToMessage: ReplyToMessage;
+  messageHistory: MessageHistory[];
 }
 
 export interface MessageViewed {

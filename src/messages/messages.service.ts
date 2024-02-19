@@ -12,7 +12,7 @@ import { DatabaseEntity } from 'src/database/entities/database';
 import { TableTypes } from 'src/database/table-types/table-types';
 import { DatabaseParam } from 'src/database/typeorm/database-params';
 import { MsSql } from 'src/database/typeorm/mssql';
-import { PostedMessage } from 'src/gateway/dto';
+import { MessageHistory, PostedMessage } from 'src/gateway/dto';
 import { Repository } from 'typeorm';
 import { MessageDto, SubjectDto } from './model/dto/dto';
 import {
@@ -97,7 +97,10 @@ export class MessagesService {
             resultObj.thumbnailS3Key
           ),
           attachmentOriginalName: resultObj.attachmentOriginalName
-        }
+        },
+        messageHistory: await this.commonService.getMessageHistory([
+          resultObj.messageId
+        ])
       };
       return postedMessage;
     } catch (error) {
@@ -191,6 +194,10 @@ export class MessagesService {
     try {
       const resultSet = await this.database.query(dbQuery);
       const subjectMessagesRaw = this.mssql.parseMultiResultSet(resultSet);
+      const messageHistoryArr: MessageHistory[] =
+        await this.commonService.getMessageHistory(
+          subjectMessagesRaw.map((m) => m.messageId)
+        );
 
       const subjectMessages: Message[] = [];
       subjectMessagesRaw.forEach((m) => {
@@ -212,7 +219,12 @@ export class MessagesService {
               m.thumbnailS3Key
             ),
             attachmentOriginalName: m.attachmentOriginalName
-          }
+          },
+          messageHistory: messageHistoryArr.filter((mh) => {
+            if (mh.messageId == m.messageId) {
+              return mh;
+            }
+          })
         };
 
         subjectMessages.push(message);
