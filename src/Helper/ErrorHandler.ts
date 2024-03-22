@@ -12,16 +12,16 @@ export class ErrorHandler {
     );
   }
 
-  public throwDatabaseError(dbError: any) {
-    throw new HttpException(
-      process.env.ENVIRONMENT === 'development'
-        ? dbError?.driverError?.originalError?.info?.message
-        : 'Database Error',
-      HttpStatus.INTERNAL_SERVER_ERROR
-    );
-  }
-
-  public throwCustomError(errorMsg: string) {
-    throw new HttpException(errorMsg, HttpStatus.INTERNAL_SERVER_ERROR);
+  public throwError(error: any) {
+    if (error?.driverError?.originalError?.info?.message) {
+      throw new HttpException(
+        process.env.ENVIRONMENT === 'development'
+          ? error.driverError.originalError.info.message
+          : 'Database Error',
+        HttpStatus.INTERNAL_SERVER_ERROR
+      );
+    } else {
+      throw new HttpException(error, HttpStatus.INTERNAL_SERVER_ERROR);
+    }
   }
 }

@@ -107,7 +107,7 @@ export class GatewayService {
       const resultObj = this.mssql.parseSingleResultSet(resultSet);
       return resultObj as MessageViewed;
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 

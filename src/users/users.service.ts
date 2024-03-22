@@ -38,19 +38,17 @@ export class UsersService {
         ? (parsedResult as AuthUserResult)
         : ({} as AuthUserResult);
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
   // Inserts a new user.
   async postUser(user: UserDto): Promise<number> {
     if (user.isClient === true && user.isProvider === true) {
-      this.errorHandler.throwCustomError('User cannot be Client and Provider.');
+      this.errorHandler.throwError('User cannot be Client and Provider.');
     }
     if (user.isClient === false && user.isProvider === false) {
-      this.errorHandler.throwCustomError(
-        'User must be either Client or Provider.'
-      );
+      this.errorHandler.throwError('User must be either Client or Provider.');
     }
 
     user.password = await bcrypt.hash(user.password, process.env.SALT_KEY);
@@ -72,7 +70,7 @@ export class UsersService {
       const resultObj = this.mssql.parseSingleResultSet(resultSet);
       return resultObj ? resultObj : { userId: null };
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 }

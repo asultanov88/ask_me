@@ -105,7 +105,7 @@ export class CommonService {
 
       return message;
     } catch (error) {
-      this.errorHandler.throwCustomError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -137,7 +137,7 @@ export class CommonService {
       ) as MessageAttachmentWithThumbnailResult[];
       return resultObj ? resultObj : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 

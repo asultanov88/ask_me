@@ -65,6 +65,7 @@ export class Gateway implements OnModuleInit, OnGatewayDisconnect {
   @UseGuards(AuthGuard)
   @SubscribeMessage('initiateSession')
   onInitiateSession(@MessageBody() body: SocketMessageDto) {
+    this.gatewayService.userSocketClinet.delete(body.user.userId);
     this.gatewayService.userSocketClinet.set(
       body.user.userId,
       body.user.socketClientId

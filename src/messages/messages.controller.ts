@@ -1,4 +1,4 @@
-import { Body, Controller, Get, Post, Query } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Post, Query } from '@nestjs/common';
 import { AttachmentMessageDto } from 'src/attachments/model/dto';
 import { PostedMessage } from 'src/gateway/dto';
 import { MessagesService } from './messages.service';
@@ -7,6 +7,13 @@ import { SubjectDto } from './model/dto/dto';
 @Controller('messages')
 export class MessagesController {
   constructor(private readonly messageService: MessagesService) {}
+
+  @Delete('message')
+  async deleteMessageById(@Query() query): Promise<any> {
+    return await this.messageService.deleteMessageById(
+      parseInt(query.messageId, 10)
+    );
+  }
 
   @Post('attachment-message')
   async postAttachmentMessage(

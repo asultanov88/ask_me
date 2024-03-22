@@ -20,6 +20,7 @@ import {
   ClientProviderMessage,
   Message
 } from './model/result/result';
+import { BooleanResult } from 'src/database/table-types/shared-result';
 
 @Injectable()
 export class MessagesService {
@@ -32,12 +33,41 @@ export class MessagesService {
     @Inject(REQUEST) private readonly request: Request
   ) {}
 
+  // Deletes message by Id.
+  async deleteMessageById(messageId: number): Promise<any> {
+    if (!messageId) {
+      this.errorHandler.throwError('MessageId is required.');
+    }
+
+    const databaseParams: DatabaseParam[] = [
+      {
+        inputParamName: 'MessageId',
+        parameterValue: this.mssql.convertToString(messageId)
+      }
+    ];
+
+    const dbQuery: string = this.mssql.getQuery(
+      databaseParams,
+      'UspDeleteMessage'
+    );
+
+    try {
+      const resultSet = await this.database.query(dbQuery);
+      const result: BooleanResult = {
+        success: true
+      };
+      return result;
+    } catch (error) {
+      this.errorHandler.throwError(error);
+    }
+  }
+
   // Posts a message with attachment.
   async postAttachmentMessage(
     attachmentMessage: AttachmentMessageDto
   ): Promise<any> {
     if (!attachmentMessage.isAttachment) {
-      this.errorHandler.throwCustomError(
+      this.errorHandler.throwError(
         'IsAttachment must be true to post attachment message.'
       );
     }
@@ -104,14 +134,14 @@ export class MessagesService {
       };
       return postedMessage;
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
   // Gets subject list between provider and a client.
   async getProviderClientSubjects(clientId: number): Promise<any> {
     if (!clientId || isNaN(clientId)) {
-      this.errorHandler.throwCustomError('clientId is not provided.');
+      this.errorHandler.throwError('clientId is not provided.');
     }
 
     const databaseParams: DatabaseParam[] = [
@@ -135,7 +165,7 @@ export class MessagesService {
       const resultObj = this.mssql.parseMultiResultSet(resultSet);
       return resultObj ? (resultObj as ClientProviderMessage[]) : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -146,17 +176,17 @@ export class MessagesService {
     chunkNum: number
   ): Promise<Message[]> {
     if (!subjectId || isNaN(subjectId)) {
-      this.errorHandler.throwCustomError(
+      this.errorHandler.throwError(
         'subjectId is required and must be a number.'
       );
     }
     if (!chunkCount || isNaN(chunkCount)) {
-      this.errorHandler.throwCustomError(
+      this.errorHandler.throwError(
         'chunkCount is required and must be a number.'
       );
     }
     if (!chunkNum || isNaN(chunkNum)) {
-      this.errorHandler.throwCustomError(
+      this.errorHandler.throwError(
         'chunkNum is required and must be a number.'
       );
     }
@@ -277,18 +307,18 @@ export class MessagesService {
 
       return subjectMessages;
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
   // Gets subject list between the selected provider and a client.
   async getClientProviderSubjects(providerId: number): Promise<any> {
     if (isNaN(providerId)) {
-      this.errorHandler.throwCustomError('ProviderId is invalid.');
+      this.errorHandler.throwError('ProviderId is invalid.');
     }
     const clientId = this.request['user'].clientId;
     if (!clientId) {
-      this.errorHandler.throwCustomError('ClientId is not found.');
+      this.errorHandler.throwError('ClientId is not found.');
     }
     const databaseParams: DatabaseParam[] = [
       {
@@ -311,7 +341,7 @@ export class MessagesService {
       const resultObj = this.mssql.parseMultiResultSet(resultSet);
       return resultObj ? (resultObj as ClientProviderMessage[]) : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -319,10 +349,10 @@ export class MessagesService {
   async postNewSubject(@Body() subject: SubjectDto): Promise<any> {
     const clientId = this.request['user'].clientId;
     if (!clientId) {
-      this.errorHandler.throwCustomError('Only client can create a subject.');
+      this.errorHandler.throwError('Only client can create a subject.');
     }
     if (!subject.providerId) {
-      this.errorHandler.throwCustomError('ProviderId must be supplied.');
+      this.errorHandler.throwError('ProviderId must be supplied.');
     }
 
     const databaseParams: DatabaseParam[] = [
@@ -346,7 +376,7 @@ export class MessagesService {
       const resultObj = this.mssql.parseSingleResultSet(resultSet);
       return resultObj ? resultObj : { success: false };
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 }

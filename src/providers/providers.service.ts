@@ -37,7 +37,7 @@ export class ProvidersService {
     const providerId = this.request['user'].providerId;
 
     if (!providerId) {
-      this.errorHandler.throwCustomError('ProviderId is not found.');
+      this.errorHandler.throwError('ProviderId is not found.');
     }
 
     const databaseParams: DatabaseParam[] = [
@@ -56,7 +56,7 @@ export class ProvidersService {
       const parsedResult = this.mssql.parseMultiResultSet(resultSet);
       return parsedResult ? (parsedResult as ProviderClient[]) : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -64,7 +64,7 @@ export class ProvidersService {
   async getMyProviders(): Promise<any> {
     const clientId = this.request['user'].clientId;
     if (!clientId) {
-      this.errorHandler.throwCustomError('Invalid client id.');
+      this.errorHandler.throwError('Invalid client id.');
     }
 
     const databaseParams: DatabaseParam[] = [
@@ -80,7 +80,7 @@ export class ProvidersService {
       const parsedResult = this.mssql.parseMultiResultSet(resultSet);
       return parsedResult ? (parsedResult as ClientProvider[]) : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -90,7 +90,7 @@ export class ProvidersService {
       !searchParams.lkCategoryId &&
       (!searchParams.searchKeyword || searchParams.searchKeyword?.trim() === '')
     ) {
-      this.errorHandler.throwCustomError(
+      this.errorHandler.throwError(
         'Both lkCategoryId and searchKeyword cannot be null.'
       );
     }
@@ -112,7 +112,7 @@ export class ProvidersService {
       const parsedResult = this.mssql.parseMultiResultSet(resultSet);
       return parsedResult ? parsedResult : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -124,10 +124,10 @@ export class ProvidersService {
       providerId = this.request['user'].providerId;
     }
     if (isNaN(providerId)) {
-      this.errorHandler.throwCustomError('ProviderId must be a number.');
+      this.errorHandler.throwError('ProviderId must be a number.');
     }
     if (!providerId) {
-      this.errorHandler.throwCustomError('ProviderId not found.');
+      this.errorHandler.throwError('ProviderId not found.');
     }
 
     // The same param is used for all 3 SPs.
@@ -169,7 +169,7 @@ export class ProvidersService {
 
       return providerDetails ? (providerDetails as ProviderDetailsResult) : {};
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -181,7 +181,7 @@ export class ProvidersService {
       const parsedResult = this.mssql.parseMultiResultSet(resultSet);
       return parsedResult ? (parsedResult as LkProviderCategory[]) : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -193,7 +193,7 @@ export class ProvidersService {
       const parsedResult = this.mssql.parseMultiResultSet(resultSet);
       return parsedResult ? (parsedResult as LkWeekDay[]) : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -205,7 +205,7 @@ export class ProvidersService {
       const parsedResult = this.mssql.parseMultiResultSet(resultSet);
       return parsedResult ? (parsedResult as LkWorkHour[]) : [];
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 
@@ -275,7 +275,7 @@ export class ProvidersService {
       const resultObj = this.mssql.parseSingleResultSet(resultSet);
       return resultObj ? resultObj : { success: false };
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
   }
 }

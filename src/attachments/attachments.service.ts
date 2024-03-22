@@ -43,9 +43,7 @@ export class AttachmentsService {
     messageAttachmentId: number
   ): Promise<AttachmentUrl> {
     if (!messageAttachmentId || isNaN(messageAttachmentId)) {
-      this.errorHandler.throwCustomError(
-        'messageAttachmentId is not provided.'
-      );
+      this.errorHandler.throwError('messageAttachmentId is not provided.');
     }
 
     const databaseParams: DatabaseParam[] = [
@@ -79,7 +77,7 @@ export class AttachmentsService {
         resultSet
       ) as MessageAttachmentResult;
     } catch (error) {
-      this.errorHandler.throwDatabaseError(error);
+      this.errorHandler.throwError(error);
     }
 
     if (messageAttachment) {
@@ -91,7 +89,7 @@ export class AttachmentsService {
       };
       return attachmentUrl;
     } else {
-      this.errorHandler.throwCustomError('Attachment not found.');
+      this.errorHandler.throwError('Attachment not found.');
     }
   }
 
@@ -102,7 +100,7 @@ export class AttachmentsService {
     thumbnailBlob: string
   ): Promise<any> {
     if (!messageId || isNaN(messageId)) {
-      this.errorHandler.throwCustomError('message is not provided or invalid.');
+      this.errorHandler.throwError('message is not provided or invalid.');
     }
 
     const thumbnailExtension = '.jpg';
@@ -199,7 +197,7 @@ export class AttachmentsService {
 
       return postedMessage;
     } catch (error) {
-      this.errorHandler.throwCustomError('Unable to upload attachment.');
+      this.errorHandler.throwError('Unable to upload attachment.');
     }
   }
 
